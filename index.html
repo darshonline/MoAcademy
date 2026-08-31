@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>الفترات والعمليات عليها - الصف الثاني الإعدادي</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+
+<style>
+/* ===================== نظام الألوان والخطوط ===================== */
+:root{
+  --ink:#16324F;
+  --ink-soft:#5B7285;
+  --teal:#0E8E8A;
+  --teal-dark:#0B6E6B;
+  --teal-tint:#E3F4F2;
+  --coral:#F2704A;
+  --coral-tint:#FDE7DF;
+  --purple:#7A5FC7;
+  --purple-tint:#EDE8FA;
+  --bg:#F5FAF9;
+  --card:#FFFFFF;
+  --line:#DDEAE8;
+  --good:#2FA84F;
+  --good-tint:#E4F6E9;
+  --bad:#E5484D;
+  --bad-tint:#FCE6E6;
+  --gold:#C98A1F;
+  --gold-tint:#FBF0DC;
+  --radius-card: 18px;
+  --radius-pill: 999px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:
+    linear-gradient(var(--bg), var(--bg)),
+    repeating-linear-gradient(0deg, rgba(14,142,138,0.05) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(90deg, rgba(14,142,138,0.05) 0 1px, transparent 1px 32px);
+  color:var(--ink);
+  font-family:'Cairo', sans-serif;
+  line-height:1.85;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{font-family:'Tajawal', sans-serif;}
+h1{font-weight:800;}
+h2{font-weight:700;}
+h3{font-weight:700;}
+button{font-family:inherit;}
+:focus-visible{outline:3px solid var(--purple); outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+}
+
+/* ===================== الترويسة والتبويبات ===================== */
+header.top{
+  background:linear-gradient(135deg, var(--ink) 0%, #1E4A6E 100%);
+  color:#fff;
+  padding:22px 18px 0;
+  text-align:center;
+}
+header.top h1{
+  margin:0 0 4px;
+  font-size:clamp(1.25rem, 4.5vw, 1.9rem);
+}
+header.top p.sub{
+  margin:0 0 18px;
+  color:#BFD8E9;
+  font-size:.95rem;
+}
+nav.tabs{
+  position:sticky; top:0; z-index:50;
+  display:flex;
+  background:#fff;
+  box-shadow:0 3px 10px rgba(22,50,79,0.12);
+  overflow-x:auto;
+}
+nav.tabs button{
+  flex:1 1 0;
+  min-width:84px;
+  border:none;
+  background:transparent;
+  color:var(--ink-soft);
+  padding:14px 6px 12px;
+  font-size:.92rem;
+  font-weight:700;
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:color .15s, border-color .15s;
+  white-space:nowrap;
+}
+nav.tabs button .ico{display:block; font-size:1.15rem; margin-bottom:2px;}
+nav.tabs button[aria-selected="true"]{
+  color:var(--teal-dark);
+  border-bottom-color:var(--teal);
+}
+nav.tabs button:hover{color:var(--teal-dark);}
+
+main{max-width:840px; margin:0 auto; padding:22px 16px 70px;}
+.panel{display:none; animation:fadeIn .35s ease;}
+.panel.active{display:block;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-card);
+  padding:20px;
+  margin-bottom:18px;
+}
+.card h2{
+  margin:0 0 12px;
+  font-size:1.25rem;
+  color:var(--ink);
+  display:flex; align-items:center; gap:10px;
+}
+.card h2 .tag{
+  background:var(--teal-tint); color:var(--teal-dark);
+  font-family:'Cairo',sans-serif; font-weight:700; font-size:.7rem;
+  padding:3px 10px; border-radius:var(--radius-pill);
+}
+.card p{margin:0 0 12px; color:var(--ink);}
+.card p.note{color:var(--ink-soft); font-size:.9rem;}
+
+/* جدول أنواع الفترات */
+.types-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+@media(min-width:600px){.types-grid{grid-template-columns:1fr 1fr;}}
+.type-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px 16px;
+  background:linear-gradient(180deg, #fff 0%, var(--teal-tint) 180%);
+}
+.type-card h3{margin:0 0 6px; font-size:1rem; color:var(--teal-dark);}
+.type-card .sym{font-size:1.15rem; direction:ltr; text-align:center; margin:6px 0;}
+.type-card .desc{font-size:.88rem; color:var(--ink-soft);}
+
+/* ===================== خط الأعداد التفاعلي ===================== */
+.numberline-wrap{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px 10px 6px;}
+svg#nlSvg{width:100%; height:auto; touch-action:none; -webkit-user-select:none; user-select:none;}
+.endpoint{cursor:grab;}
+.endpoint:active{cursor:grabbing;}
+.controls-row{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center;
+  margin:10px 0;
+}
+.pill-btn{
+  border:1.5px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  border-radius:var(--radius-pill);
+  padding:7px 14px;
+  font-size:.85rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s;
+}
+.pill-btn:hover{border-color:var(--teal);}
+.pill-btn.active-a{background:var(--teal); color:#fff; border-color:var(--teal);}
+.pill-btn.active-b{background:var(--coral); color:#fff; border-color:var(--coral);}
+.pill-btn.on{background:var(--purple); color:#fff; border-color:var(--purple);}
+
+.readout{
+  background:var(--teal-tint);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-top:10px;
+  text-align:center;
+}
+.readout .notation{font-size:1.3rem; direction:ltr; color:var(--teal-dark); font-weight:700; margin-bottom:6px;}
+.readout .builder{font-size:1rem; color:var(--ink); direction:ltr;}
+.op-result{
+  margin-top:10px;
+  border-top:1px dashed var(--line);
+  padding-top:10px;
+  display:grid; gap:8px;
+}
+@media(min-width:560px){.op-result{grid-template-columns:1fr 1fr;}}
+.op-box{background:var(--purple-tint); border-radius:12px; padding:10px 12px; text-align:center;}
+.op-box .lbl{font-size:.78rem; color:var(--ink-soft); margin-bottom:3px;}
+.op-box .val{font-size:1.05rem; direction:ltr; color:#4A3A8C; font-weight:700;}
+
+/* ===================== أمثلة محلولة ===================== */
+.example{border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px; background:#fff;}
+.example .qtext{font-weight:700; margin-bottom:8px;}
+.reveal-btn{
+  border:none; background:var(--teal); color:#fff; font-weight:700;
+  padding:8px 18px; border-radius:var(--radius-pill); cursor:pointer; font-size:.88rem;
+}
+.reveal-btn:hover{background:var(--teal-dark);}
+.solution{
+  margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);
+  display:none; color:var(--ink);
+}
+.solution.show{display:block; animation:fadeIn .3s ease;}
+
+/* ===================== الاختبار ===================== */
+.progress-mini{
+  display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+}
+.stat{
+  flex:1 1 130px;
+  background:#fff; border:1px solid var(--line); border-radius:14px;
+  padding:12px; text-align:center;
+}
+.stat .num{font-size:1.4rem; font-weight:800; color:var(--teal-dark); font-family:'Tajawal',sans-serif;}
+.stat .lbl{font-size:.78rem; color:var(--ink-soft);}
+
+.start-quiz-box{text-align:center; padding:26px 16px;}
+.big-btn{
+  border:none; background:var(--teal); color:#fff; font-weight:800; font-size:1.05rem;
+  padding:14px 34px; border-radius:var(--radius-pill); cursor:pointer;
+  box-shadow:0 6px 16px rgba(14,142,138,0.35);
+}
+.big-btn:hover{background:var(--teal-dark);}
+.big-btn.coral{background:var(--coral); box-shadow:0 6px 16px rgba(242,112,74,0.35);}
+.big-btn.coral:hover{background:#D85C36;}
+
+.qhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:.85rem; color:var(--ink-soft);}
+.qhead .badge-tier{
+  padding:3px 10px; border-radius:var(--radius-pill); font-weight:700; font-size:.75rem;
+}
+.tier-easy{background:var(--good-tint); color:var(--good);}
+.tier-medium{background:var(--gold-tint); color:var(--gold);}
+.tier-hard{background:var(--bad-tint); color:var(--bad);}
+
+.qprompt{font-size:1.08rem; font-weight:700; margin-bottom:14px;}
+.options{display:grid; gap:10px;}
+.opt-btn{
+  text-align:right;
+  border:1.5px solid var(--line);
+  background:#fff;
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  font-size:.98rem;
+  direction:ltr;
+  text-align:center;
+  transition:transform .1s;
+}
+.opt-btn:hover{border-color:var(--teal);}
+.opt-btn.correct{background:var(--good-tint); border-color:var(--good); color:#1c6b34;}
+.opt-btn.wrong{background:var(--bad-tint); border-color:var(--bad); color:#a01d21; animation:shake .35s;}
+.opt-btn[disabled]{cursor:default;}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-6px);}
+  75%{transform:translateX(6px);}
+}
+@keyframes bounce{
+  0%{transform:scale(1);}
+  35%{transform:scale(1.05);}
+  100%{transform:scale(1);}
+}
+.opt-btn.correct{animation:bounce .4s;}
+
+.match-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.match-col h4{font-size:.85rem; color:var(--ink-soft); margin:0 0 8px; text-align:center;}
+.match-item{
+  border:1.5px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px;
+  text-align:center; cursor:pointer; font-size:.92rem; background:#fff; direction:ltr;
+}
+.match-item.selected{border-color:var(--purple); background:var(--purple-tint);}
+.match-item.paired-correct{border-color:var(--good); background:var(--good-tint);}
+.match-item.paired-wrong{border-color:var(--bad); background:var(--bad-tint);}
+.match-item[disabled], .match-item.locked{cursor:default; opacity:.85;}
+
+.fill-row{display:flex; gap:8px; direction:ltr;}
+.fill-row input{
+  flex:1; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px;
+  font-size:1rem; direction:ltr; text-align:center; font-family:inherit;
+}
+.fill-row input:focus{border-color:var(--teal);}
+.check-btn{
+  border:none; background:var(--ink); color:#fff; font-weight:700; border-radius:10px;
+  padding:0 20px; cursor:pointer;
+}
+
+.feedback{
+  margin-top:14px; padding:12px 14px; border-radius:12px; font-size:.92rem; display:none;
+}
+.feedback.show{display:block; animation:fadeIn .25s ease;}
+.feedback.ok{background:var(--good-tint); color:#1c6b34;}
+.feedback.bad{background:var(--bad-tint); color:#a01d21;}
+.next-btn{
+  display:block; margin:14px auto 0; border:none; background:var(--ink); color:#fff;
+  font-weight:700; padding:10px 26px; border-radius:var(--radius-pill); cursor:pointer;
+}
+
+.report-badge{
+  text-align:center; padding:10px 0 20px;
+}
+.report-badge .score{font-size:2.4rem; font-weight:800; font-family:'Tajawal',sans-serif; color:var(--teal-dark);}
+.report-badge .pct{color:var(--ink-soft); font-size:1rem;}
+.level-chip{
+  display:inline-block; margin-top:10px; padding:6px 18px; border-radius:var(--radius-pill);
+  font-weight:800; font-size:.95rem;
+}
+.lvl-0{background:var(--bad-tint); color:var(--bad);}
+.lvl-1{background:var(--gold-tint); color:var(--gold);}
+.lvl-2{background:var(--teal-tint); color:var(--teal-dark);}
+.lvl-3{background:var(--good-tint); color:var(--good);}
+
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+.bar-row .name{width:110px; font-size:.85rem; color:var(--ink-soft); flex-shrink:0;}
+.bar-track{flex:1; background:var(--bg); border-radius:var(--radius-pill); height:14px; overflow:hidden; border:1px solid var(--line);}
+.bar-fill{height:100%; background:linear-gradient(90deg, var(--teal), var(--teal-dark)); border-radius:var(--radius-pill); transition:width .6s ease;}
+.bar-row .pct-txt{width:38px; font-size:.8rem; color:var(--ink-soft); text-align:left;}
+
+.recommend-list{margin:0; padding-inline-start:20px;}
+.recommend-list li{margin-bottom:6px;}
+
+.report-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:18px;}
+
+footer.appfoot{text-align:center; color:var(--ink-soft); font-size:.8rem; padding:20px; }
+
+@media print{
+  header.top, nav.tabs, .no-print{display:none !important;}
+  .panel{display:block !important;}
+  #panel-quiz > *:not(#reportView){display:none !important;}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>الفترات والعمليات عليها</h1>
+  <p class="sub">الصف الثاني الإعدادي — الوحدة: المجموعات والفترات</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="أقسام الدرس">
+  <button role="tab" aria-selected="true" id="tabbtn-learn" data-target="learn"><span class="ico">📘</span>افهم</button>
+  <button role="tab" aria-selected="false" id="tabbtn-visualize" data-target="visualize"><span class="ico">📏</span>تصوّر</button>
+  <button role="tab" aria-selected="false" id="tabbtn-examples" data-target="examples"><span class="ico">✏️</span>أمثلة</button>
+  <button role="tab" aria-selected="false" id="tabbtn-quiz" data-target="quiz"><span class="ico">🎯</span>اختبر نفسك</button>
+</nav>
+
+<main>
+
+<!-- ======================= التبويب 1: افهم ======================= -->
+<section class="panel active" id="panel-learn" role="tabpanel" aria-labelledby="tabbtn-learn">
+
+  <div class="card">
+    <h2>لماذا نحتاج إلى الفترات؟</h2>
+    <p>تعلمنا من قبل أن المجموعة يمكن التعبير عنها بطريقتين: <strong>السرد</strong> (بكتابة عناصرها بين قوسين)، أو <strong>الصفة المميزة</strong> (بوصف خاصية عناصرها).</p>
+    <p>لكن جرّب أن تسرد كل الأعداد الحقيقية الواقعة بين 1 و 2 مثلاً... ستجد أن هذا مستحيل، لأن بين أي عددين حقيقيين يوجد عدد لا نهائي من الأعداد الحقيقية الأخرى. لهذا نحتاج إلى طريقة جديدة ومختصرة للتعبير عن مثل هذه المجموعات الجزئية من <span class="math">\(\mathbb{R}\)</span>، وهي <strong>الفترة</strong>.</p>
+  </div>
+
+  <div class="card">
+    <h2>تعريف الفترة</h2>
+    <p>الفترة هي طريقة رمزية للتعبير عن مجموعة جزئية من مجموعة الأعداد الحقيقية <span class="math">\(\mathbb{R}\)</span>، تُكتب باستخدام أصغر عنصرين حدّيّين لها.</p>
+    <p class="note">⚠️ قاعدة مهمة: نكتب العدد الأصغر دائمًا في الطرف الأيمن من الرمز (يمين الفاصلة عند القراءة العربية) ثم العدد الأكبر — أي نكتب دومًا: العدد الأصغر ثم الأكبر.</p>
+  </div>
+
+  <div class="card">
+    <h2>أنواع الفترات</h2>
+    <div class="types-grid">
+      <div class="type-card">
+        <h3>الفترة المغلقة</h3>
+        <div class="sym math">\([a , b] = \{x : x \in \mathbb{R} , a \le x \le b\}\)</div>
+        <div class="desc">تشمل الطرفين a و b. تُمثَّل بدائرتين ممتلئتين على خط الأعداد.</div>
+      </div>
+      <div class="type-card">
+        <h3>الفترة المفتوحة</h3>
+        <div class="sym math">\(]a , b[ = \{x : x \in \mathbb{R} , a < x < b\}\)</div>
+        <div class="desc">لا تشمل أيًا من الطرفين. تُمثَّل بدائرتين مفرغتين.</div>
+      </div>
+      <div class="type-card">
+        <h3>نصف مفتوحة يمين</h3>
+        <div class="sym math">\([a , b[ = \{x : x \in \mathbb{R} , a \le x < b\}\)</div>
+        <div class="desc">تشمل a ولا تشمل b. دائرة ممتلئة عند a ومفرغة عند b.</div>
+      </div>
+      <div class="type-card">
+        <h3>نصف مفتوحة يسار</h3>
+        <div class="sym math">\(]a , b] = \{x : x \in \mathbb{R} , a < x \le b\}\)</div>
+        <div class="desc">لا تشمل a وتشمل b. دائرة مفرغة عند a وممتلئة عند b.</div>
+      </div>
+    </div>
+    <p style="margin-top:14px;">وللفترات غير المنتهية نستخدم الرمزين <span class="math">\(\infty\)</span> (ما لا نهاية موجب) و<span class="math">\(-\infty\)</span> (ما لا نهاية سالب)، وتكون الفترة دائمًا <strong>مفتوحة</strong> من جهة اللانهاية لأن اللانهاية ليست عددًا حقيقيًا فلا يمكن أن تكون طرفًا مشمولًا:</p>
+    <p class="math">\([a , \infty[ \quad\quad ]-\infty , b] \quad\quad ]-\infty , \infty[ = \mathbb{R}\)</p>
+  </div>
+
+  <div class="card">
+    <h2>العمليات على الفترات</h2>
+    <p>بما أن كل فترة هي مجموعة، يمكن إجراء عمليات المجموعات المعتادة عليها:</p>
+    <ul>
+      <li><strong>الاتحاد ∪</strong>: مجموعة كل عنصر ينتمي إلى الفترة الأولى أو الثانية (أو كلتيهما).</li>
+      <li><strong>التقاطع ∩</strong>: مجموعة العناصر المشتركة بين الفترتين فقط.</li>
+      <li><strong>الفرق −</strong>: عناصر الفترة الأولى التي لا تنتمي إلى الثانية.</li>
+      <li><strong>المتمم</strong>: عناصر <span class="math">\(\mathbb{R}\)</span> التي لا تنتمي إلى الفترة، باعتبار <span class="math">\(\mathbb{R}\)</span> هو الفضاء الشامل.</li>
+    </ul>
+    <p class="note">جرّب هذه العمليات بنفسك بشكل تفاعلي في تبويب "تصوّر".</p>
+  </div>
+</section>
+
+<!-- ======================= التبويب 2: تصوّر ======================= -->
+<section class="panel" id="panel-visualize" role="tabpanel" aria-labelledby="tabbtn-visualize">
+
+  <div class="card">
+    <h2>خط الأعداد التفاعلي <span class="tag">اسحب النقاط</span></h2>
+    <p class="note">اسحب الدائرتين الملوّنتين لتغيير حدود الفترة، واضغط ضغطة واحدة على أي دائرة لتحويلها بين "مغلقة ●" و"مفتوحة ○".</p>
+
+    <div class="controls-row">
+      <button class="pill-btn active-a" id="btnEditA">✏️ تحرير الفترة A (أزرق)</button>
+      <button class="pill-btn" id="btnEditB">✏️ تحرير الفترة B (برتقالي)</button>
+      <button class="pill-btn" id="btnToggleB">➕ تفعيل الفترة الثانية B</button>
+    </div>
+
+    <div class="numberline-wrap">
+      <svg id="nlSvg" viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg" aria-label="خط الأعداد التفاعلي"></svg>
+    </div>
+
+    <div class="readout">
+      <div class="notation" id="readoutNotationA">[ -3 , 2 [</div>
+      <div class="builder" id="readoutBuilderA">{ x : x ∈ ℝ , -3 ≤ x &lt; 2 }</div>
+    </div>
+
+    <div id="bReadoutWrap" style="display:none;">
+      <div class="readout" style="background:var(--coral-tint); margin-top:10px;">
+        <div class="notation" id="readoutNotationB" style="color:#C1502C;">[ 0 , 5 [</div>
+        <div class="builder" id="readoutBuilderB">{ x : x ∈ ℝ , 0 ≤ x &lt; 5 }</div>
+      </div>
+
+      <div class="op-result">
+        <div class="op-box">
+          <div class="lbl">A ∪ B (الاتحاد)</div>
+          <div class="val" id="unionVal">—</div>
+        </div>
+        <div class="op-box">
+          <div class="lbl">A ∩ B (التقاطع)</div>
+          <div class="val" id="interVal">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= التبويب 3: أمثلة ======================= -->
+<section class="panel" id="panel-examples" role="tabpanel" aria-labelledby="tabbtn-examples">
+  <div class="card">
+    <h2>أمثلة محلولة خطوة بخطوة</h2>
+    <p class="note">اضغط "الحل" لإظهار خطوات الحل لكل مثال.</p>
+  </div>
+  <div id="examplesList"></div>
+</section>
+
+<!-- ======================= التبويب 4: اختبر نفسك ======================= -->
+<section class="panel" id="panel-quiz" role="tabpanel" aria-labelledby="tabbtn-quiz">
+
+  <div class="card no-print">
+    <h2>تقدمك في هذه الجلسة</h2>
+    <p class="note">تُحفظ هذه الإحصاءات أثناء الجلسة الحالية فقط داخل المتصفح، وتُعاد للصفر عند إعادة تحميل الصفحة.</p>
+    <div class="progress-mini">
+      <div class="stat"><div class="num" id="statLast">—</div><div class="lbl">آخر نتيجة</div></div>
+      <div class="stat"><div class="num" id="statBest">—</div><div class="lbl">أفضل نتيجة</div></div>
+      <div class="stat"><div class="num" id="statAttempts">0</div><div class="lbl">عدد المحاولات</div></div>
+      <div class="stat"><div class="num" id="statWeak">—</div><div class="lbl">أضعف مهارة</div></div>
+    </div>
+  </div>
+
+  <div class="card start-quiz-box no-print" id="startBox">
+    <h2 style="justify-content:center;">اختبار الفترات</h2>
+    <p>15 سؤالًا متدرجة الصعوبة (سهل ← متوسط ← صعب) لقياس فهمك لأنواع الفترات وترميزها والعمليات عليها.</p>
+    <button class="big-btn" id="btnStartQuiz">ابدأ الاختبار</button>
+  </div>
+
+  <div class="card" id="quizBox" style="display:none;">
+    <div class="qhead">
+      <span id="qCounter">سؤال 1 / 15</span>
+      <span class="badge-tier tier-easy" id="qTierBadge">سهل</span>
+    </div>
+    <div id="qCategoryTag" class="note" style="margin-bottom:8px; font-size:.8rem;"></div>
+    <div class="qprompt" id="qPrompt"></div>
+    <div id="qBody"></div>
+    <div class="feedback" id="qFeedback"></div>
+    <button class="next-btn" id="btnNext" style="display:none;">السؤال التالي →</button>
+  </div>
+
+  <div class="card" id="reportView" style="display:none;">
+    <div class="report-badge">
+      <div class="score" id="reportScore">0 / 15</div>
+      <div class="pct" id="reportPct">0%</div>
+      <div class="level-chip" id="reportLevel">—</div>
+    </div>
+
+    <h3>الأداء حسب المهارة</h3>
+    <div id="barChart"></div>
+
+    <h3>توصيات للمراجعة</h3>
+    <ul class="recommend-list" id="recommendList"></ul>
+
+    <div class="report-actions no-print">
+      <button class="big-btn" id="btnRetry">🔁 أعد الاختبار</button>
+      <button class="big-btn coral" id="btnPrint">🖨️ طباعة النتيجة</button>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<footer class="appfoot">درس تفاعلي — الفترات والعمليات عليها — الرياضيات، الصف الثاني الإعدادي</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   أدوات مساعدة عامة
+   ============================================================ */
+function fmtNum(v){
+  if(v===Infinity) return '∞';
+  if(v===-Infinity) return '-∞';
+  return String(v);
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function renderMath(container){
+  if(window.renderMathInElement){
+    renderMathInElement(container || document.body, {
+      delimiters:[
+        {left:"\\(", right:"\\)", display:false},
+        {left:"$$", right:"$$", display:true}
+      ]
+    });
+  }
+}
+
+/* ============================================================
+   التبويبات
+   ============================================================ */
+const tabBtns = document.querySelectorAll('nav.tabs button');
+tabBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    tabBtns.forEach(b=>b.setAttribute('aria-selected','false'));
+    btn.setAttribute('aria-selected','true');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+btn.dataset.target).classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+
+/* ============================================================
+   قسم 2: خط الأعداد التفاعلي
+   ============================================================ */
+const NL_MIN=-10, NL_MAX=10;
+const SVG_LEFT=44, SVG_RIGHT=596, SVG_Y=95;
+function valToX(v){
+  const t = (v-NL_MIN)/(NL_MAX-NL_MIN);
+  return SVG_LEFT + t*(SVG_RIGHT-SVG_LEFT);
+}
+function xToVal(x){
+  const t = (x-SVG_LEFT)/(SVG_RIGHT-SVG_LEFT);
+  let v = NL_MIN + t*(NL_MAX-NL_MIN);
+  v = Math.max(NL_MIN, Math.min(NL_MAX, v));
+  return Math.round(v);
+}
+
+let intervalA = {a:-3, b:2, aOpen:false, bOpen:true};
+let intervalB = {a:0, b:5, aOpen:false, bOpen:true};
+let bEnabled = false;
+let editing = 'A'; // 'A' or 'B'
+
+const svg = document.getElementById('nlSvg');
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function buildAxis(){
+  // خط أفقي رئيسي
+  svg.appendChild(el('line',{x1:SVG_LEFT-14,y1:SVG_Y,x2:SVG_RIGHT+14,y2:SVG_Y,stroke:'#B9CDCC','stroke-width':2}));
+  // سهم يسار (سالب لانهاية) - تذكر اتجاه RTL للعرض لكن القيم الرياضية تبقى القياسية: نرسم -10 يسار و+10 يمين بصريًا كخط أعداد تقليدي
+  for(let v=NL_MIN; v<=NL_MAX; v++){
+    const x = valToX(v);
+    const isMajor = v%2===0;
+    svg.appendChild(el('line',{x1:x,y1:SVG_Y-(isMajor?7:4),x2:x,y2:SVG_Y+(isMajor?7:4),stroke:'#B9CDCC','stroke-width':1.4}));
+    if(isMajor){
+      const t = el('text',{x:x,y:SVG_Y+24,'text-anchor':'middle','font-size':'11','font-family':'Cairo, sans-serif',fill:'#5B7285'});
+      t.textContent = v;
+      svg.appendChild(t);
+    }
+  }
+}
+
+function clearDynamic(){
+  svg.querySelectorAll('.dyn').forEach(n=>n.remove());
+}
+
+function drawSegment(iv, y, color, key){
+  const x1 = valToX(iv.a), x2 = valToX(iv.b);
+  const grp = el('g',{class:'dyn'});
+  grp.appendChild(el('line',{x1:x1,y1:y,x2:x2,y2:y,stroke:color,'stroke-width':6,'stroke-linecap':'round'}));
+
+  // نقطة a
+  const ca = el('circle',{class:'dyn endpoint', cx:x1, cy:y, r:9,
+    fill: iv.aOpen? '#fff': color, stroke: color, 'stroke-width':3, 'data-key':key, 'data-end':'a'});
+  grp.appendChild(ca);
+  // نقطة b
+  const cb = el('circle',{class:'dyn endpoint', cx:x2, cy:y, r:9,
+    fill: iv.bOpen? '#fff': color, stroke: color, 'stroke-width':3, 'data-key':key, 'data-end':'b'});
+  grp.appendChild(cb);
+
+  svg.appendChild(grp);
+  return {ca,cb};
+}
+
+function drawLine(){
+  clearDynamic();
+  const yA = bEnabled ? 60 : 60;
+  drawSegment(intervalA, yA, '#0E8E8A', 'A');
+  if(bEnabled){
+    drawSegment(intervalB, 128, '#F2704A', 'B');
+  }
+  attachDrag();
+  updateReadouts();
+}
+
+function fmtInterval(iv){
+  const aInf = iv.a===-Infinity, bInf = iv.b===Infinity;
+  const lb = (aInf || iv.aOpen) ? ']' : '[';
+  const rb = (bInf || iv.bOpen) ? '[' : ']';
+  return `${lb} ${fmtNum(iv.a)} , ${fmtNum(iv.b)} ${rb}`;
+}
+function fmtBuilder(iv){
+  const aInf = iv.a===-Infinity, bInf = iv.b===Infinity;
+  const leftPart = aInf ? '' : `${fmtNum(iv.a)} ${iv.aOpen?'&lt;':'≤'} `;
+  const rightPart = bInf ? '' : ` ${iv.bOpen?'&lt;':'≤'} ${fmtNum(iv.b)}`;
+  return `{ x : x ∈ ℝ , ${leftPart}x${rightPart} }`;
+}
+
+function updateReadouts(){
+  document.getElementById('readoutNotationA').textContent = fmtInterval(intervalA);
+  document.getElementById('readoutBuilderA').innerHTML = fmtBuilder(intervalA);
+  if(bEnabled){
+    document.getElementById('bReadoutWrap').style.display='block';
+    document.getElementById('readoutNotationB').textContent = fmtInterval(intervalB);
+    document.getElementById('readoutBuilderB').innerHTML = fmtBuilder(intervalB);
+    computeOps();
+  } else {
+    document.getElementById('bReadoutWrap').style.display='none';
+  }
+}
+
+function intersectIntervals(A,B){
+  let lo, loOpen, hi, hiOpen;
+  if(A.a>B.a){lo=A.a; loOpen=A.aOpen;}
+  else if(B.a>A.a){lo=B.a; loOpen=B.aOpen;}
+  else {lo=A.a; loOpen = A.aOpen || B.aOpen;}
+  if(A.b<B.b){hi=A.b; hiOpen=A.bOpen;}
+  else if(B.b<A.b){hi=B.b; hiOpen=B.bOpen;}
+  else {hi=A.b; hiOpen = A.bOpen || B.bOpen;}
+  if(lo>hi) return null;
+  if(lo===hi && (loOpen||hiOpen)) return null;
+  return {a:lo,b:hi,aOpen:loOpen,bOpen:hiOpen};
+}
+function unionIntervals(A,B){
+  let X = A.a<=B.a ? A : B;
+  let Y = X===A ? B : A;
+  const touchOrOverlap = X.b > Y.a || (X.b===Y.a && !(X.bOpen && Y.aOpen));
+  if(!touchOrOverlap){
+    return {disjoint:true};
+  }
+  const newA = X.a, newAOpen = (X.a===Y.a) ? (X.aOpen && Y.aOpen) : X.aOpen;
+  let newB, newBOpen;
+  if(X.b>Y.b){newB=X.b; newBOpen=X.bOpen;}
+  else if(Y.b>X.b){newB=Y.b; newBOpen=Y.bOpen;}
+  else {newB=X.b; newBOpen = X.bOpen && Y.bOpen;}
+  return {disjoint:false, merged:{a:newA,b:newB,aOpen:newAOpen,bOpen:newBOpen}};
+}
+
+function computeOps(){
+  const inter = intersectIntervals(intervalA, intervalB);
+  document.getElementById('interVal').textContent = inter ? fmtInterval(inter) : '∅ (مجموعة خالية)';
+  const uni = unionIntervals(intervalA, intervalB);
+  if(uni.disjoint){
+    document.getElementById('unionVal').textContent = fmtInterval(intervalA)+' ∪ '+fmtInterval(intervalB);
+  } else {
+    document.getElementById('unionVal').textContent = fmtInterval(uni.merged);
+  }
+}
+
+function attachDrag(){
+  svg.querySelectorAll('.endpoint').forEach(node=>{
+    let dragging=false, moved=false, startX=0;
+    node.addEventListener('pointerdown', (e)=>{
+      dragging=true; moved=false; startX=e.clientX;
+      node.setPointerCapture(e.pointerId);
+    });
+    node.addEventListener('pointermove', (e)=>{
+      if(!dragging) return;
+      if(Math.abs(e.clientX-startX)>3) moved=true;
+      if(!moved) return;
+      const rect = svg.getBoundingClientRect();
+      const scaleX = 640/rect.width;
+      const svgX = (e.clientX-rect.left)*scaleX;
+      const newVal = xToVal(svgX);
+      applyDrag(node.dataset.key, node.dataset.end, newVal);
+    });
+    function endDrag(e){
+      if(!dragging) return;
+      dragging=false;
+      if(!moved){
+        // ضغطة بسيطة = تبديل مفتوح/مغلق
+        toggleOpen(node.dataset.key, node.dataset.end);
+      }
+    }
+    node.addEventListener('pointerup', endDrag);
+    node.addEventListener('pointercancel', endDrag);
+  });
+}
+
+function applyDrag(key, end, val){
+  const iv = key==='A' ? intervalA : intervalB;
+  if(end==='a'){
+    iv.a = Math.min(val, iv.b-0);
+    if(iv.a>=iv.b) iv.a = iv.b-1;
+  } else {
+    iv.b = Math.max(val, iv.a);
+    if(iv.b<=iv.a) iv.b = iv.a+1;
+  }
+  drawLine();
+}
+function toggleOpen(key, end){
+  const iv = key==='A' ? intervalA : intervalB;
+  if(end==='a') iv.aOpen = !iv.aOpen; else iv.bOpen = !iv.bOpen;
+  drawLine();
+}
+
+document.getElementById('btnToggleB').addEventListener('click', function(){
+  bEnabled = !bEnabled;
+  this.textContent = bEnabled ? '➖ إخفاء الفترة الثانية B' : '➕ تفعيل الفترة الثانية B';
+  this.classList.toggle('on', bEnabled);
+  drawLine();
+});
+
+buildAxis();
+drawLine();
+
+/* ============================================================
+   قسم 3: أمثلة محلولة
+   ============================================================ */
+const examples = [
+  {
+    q: 'عبّر عن المجموعة \\(\\{x : x\\in\\mathbb{R} , -2 \\le x \\le 5\\}\\) في صورة فترة.',
+    steps: [
+      'العدد الأصغر هو −2 والعدد الأكبر هو 5.',
+      'التعبير يحتوي على ≤ من الجانبين، إذن الفترة مغلقة من الطرفين.',
+      'الفترة هي: \\([-2 , 5]\\)'
+    ]
+  },
+  {
+    q: 'ارسم الفترة \\(]1 , 4]\\) على خط الأعداد.',
+    steps: [
+      'الطرف الأيسر 1 غير مشمول (مفتوح) ← دائرة مفرغة عند 1.',
+      'الطرف الأيمن 4 مشمول (مغلق) ← دائرة ممتلئة عند 4.',
+      'نصل بين الدائرتين بخط متصل يمثل جميع الأعداد بينهما.'
+    ]
+  },
+  {
+    q: 'أوجد \\([-1 , 3] \\cap [2 , 6]\\).',
+    steps: [
+      'التقاطع يشمل الأعداد الموجودة في كلتا الفترتين معًا.',
+      'أكبر طرف أيسر بين الفترتين: max(−1, 2) = 2 (وكلاهما مغلق عند هذه النقطة في الفترة الثانية).',
+      'أصغر طرف أيمن بين الفترتين: min(3, 6) = 3.',
+      'الناتج: \\([2 , 3]\\)'
+    ]
+  },
+  {
+    q: 'أوجد \\(]-\\infty , 4[ \\cup [4 , \\infty[\\).',
+    steps: [
+      'الفترة الأولى تشمل كل الأعداد الأصغر من 4 (بدون 4).',
+      'الفترة الثانية تشمل كل الأعداد الأكبر من أو تساوي 4 (بما فيها 4).',
+      'باتحادهما نغطي كل عدد حقيقي ممكن.',
+      'الناتج: \\(]-\\infty , \\infty[ = \\mathbb{R}\\)'
+    ]
+  },
+  {
+    q: 'عبّر عن \\(\\{x : x\\in\\mathbb{R} , x > 2\\}\\) في صورة فترة غير منتهية.',
+    steps: [
+      'x أكبر من 2 تمامًا (2 غير مشمول)، وتمتد الأعداد إلى ما لا نهاية موجب.',
+      'اللانهاية دائمًا طرف مفتوح.',
+      'الفترة هي: \\(]2 , \\infty[\\)'
+    ]
+  }
+];
+
+const exList = document.getElementById('examplesList');
+examples.forEach((ex, i)=>{
+  const div = document.createElement('div');
+  div.className='example';
+  div.innerHTML = `
+    <div class="qtext">مثال ${i+1}: <span class="math">${ex.q}</span></div>
+    <button class="reveal-btn">الحل</button>
+    <div class="solution">
+      <ol style="margin:0; padding-inline-start:20px;">
+        ${ex.steps.map(s=>`<li style="margin-bottom:6px;" class="math">${s}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+  const btn = div.querySelector('.reveal-btn');
+  const sol = div.querySelector('.solution');
+  btn.addEventListener('click', ()=>{
+    const showing = sol.classList.toggle('show');
+    btn.textContent = showing ? 'إخفاء الحل' : 'الحل';
+    if(showing) renderMath(sol);
+  });
+  exList.appendChild(div);
+});
+renderMath(exList);
+
+/* ============================================================
+   قسم 4: اختبر نفسك
+   ============================================================ */
+const CAT_NAMES = {types:'أنواع الفترات', notation:'الترميز', operations:'العمليات', graphs:'التمثيل البياني'};
+
+const bank = [
+  // ---- سهل (5) ----
+  {id:'e1', tier:'easy', cat:'types', type:'mcq',
+   prompt:'أي نوع من الفترات يمثلها الرمز \\([2 , 7]\\)؟',
+   options:['مغلقة','مفتوحة','نصف مفتوحة يمين','نصف مفتوحة يسار'], correct:0,
+   exp:'كلا الطرفين محاطان بقوسين مربعين موجّهين للداخل، أي أن الفترة تشمل 2 و7 معًا، فهي فترة مغلقة.'},
+  {id:'e2', tier:'easy', cat:'notation', type:'mcq',
+   prompt:'عبّر عن \\(\\{x : x\\in\\mathbb{R} , 1 \\le x < 6\\}\\) في صورة فترة.',
+   options:['\\([1,6[\\)','\\(]1,6]\\)','\\([1,6]\\)','\\(]1,6[\\)'], correct:0,
+   exp:'≤ عند 1 يعني طرفًا مغلقًا [، و< عند 6 يعني طرفًا مفتوحًا [، فالناتج [1,6['},
+  {id:'e3', tier:'easy', cat:'graphs', type:'mcq',
+   prompt:'كيف تُمثَّل نهايتا الفترة \\(]-2 , 3[\\) على خط الأعداد؟',
+   options:['دائرتان مفرغتان عند -2 و3','دائرتان ممتلئتان عند -2 و3','ممتلئة عند -2 ومفرغة عند 3','مفرغة عند -2 وممتلئة عند 3'], correct:0,
+   exp:'الفترة مفتوحة من الطرفين، فكلا القوسين لا يشملان طرفيهما، وتُرسم دائرتان مفرغتان.'},
+  {id:'e4', tier:'easy', cat:'operations', type:'mcq',
+   prompt:'أوجد \\([1,5] \\cup [5,9]\\).',
+   options:['\\([1,9]\\)','فترتان منفصلتان','\\(\\{5\\}\\)','لا يوجد اتحاد'], correct:0,
+   exp:'الفترتان تتلاقيان عند النقطة 5 المشمولة في كلتيهما، فيندمجان في فترة واحدة متصلة [1,9].'},
+  {id:'e5', tier:'easy', cat:'notation', type:'fill',
+   prompt:'اكتب الفترة التي تمثل جميع الأعداد الحقيقية الأكبر من 4 تمامًا (فترة غير منتهية).',
+   accept:[']4,∞[','] 4 , ∞ [','(4,∞)',']4,inf['],
+   exp:'x أكبر من 4 (غير شامل) وتمتد لما لا نهاية، والفترة دائمًا مفتوحة عند اللانهاية: ]4,∞['},
+
+  // ---- متوسط (5) ----
+  {id:'m1', tier:'medium', cat:'types', type:'mcq',
+   prompt:'الفترة \\(]-1 , 4]\\) تسمى:',
+   options:['نصف مفتوحة يسار','نصف مفتوحة يمين','فترة مغلقة','فترة مفتوحة'], correct:0,
+   exp:'الطرف الأيسر −1 مفتوح، والطرف الأيمن 4 مغلق، وهذا هو تعريف "نصف مفتوحة يسار".'},
+  {id:'m2', tier:'medium', cat:'operations', type:'mcq',
+   prompt:'أوجد \\(]-\\infty,4[ \\cap [1,\\infty[\\).',
+   options:['\\([1,4[\\)','\\(]1,4]\\)','\\([1,4]\\)','\\(]1,4[\\)'], correct:0,
+   exp:'أكبر طرف أيسر هو 1 (مغلق)، وأصغر طرف أيمن هو 4 (مفتوح لأنه من الفترة الأولى)، فالناتج [1,4['},
+  {id:'m3', tier:'medium', cat:'notation', type:'mcq',
+   prompt:'حوّل \\(\\{x : x\\in\\mathbb{R} , -3 < x \\le 0\\}\\) إلى فترة.',
+   options:['\\(]-3,0]\\)','\\([-3,0[\\)','\\([-3,0]\\)','\\(]-3,0[\\)'], correct:0,
+   exp:'< عند −3 يعني مفتوحًا ]، و≤ عند 0 يعني مغلقًا ]، فالناتج ]-3,0]'},
+  {id:'m4', tier:'medium', cat:'graphs', type:'match',
+   prompt:'طابق كل فترة بنوعها الصحيح (اضغط على العنصرين المتطابقين بالتتابع):',
+   left:['\\([2,5]\\)','\\(]2,5[\\)','\\([2,5[\\)'],
+   right:['مغلقة','مفتوحة','نصف مفتوحة يمين'],
+   pairs:[0,1,2],
+   exp:'[2,5] مغلقة، ]2,5[ مفتوحة، [2,5[ نصف مفتوحة يمين (مغلقة يسارًا، مفتوحة يمينًا).'},
+  {id:'m5', tier:'medium', cat:'operations', type:'fill',
+   prompt:'أوجد \\([2,8] - [5,10]\\) (اكتب الناتج في صورة فترة).',
+   accept:['[2,5[','[ 2 , 5 [','[2,5)'],
+   exp:'نطرح من [2,8] كل ما هو مشترك مع [5,10] أي [5,8]، فيتبقى [2,5['},
+
+  // ---- صعب (5) ----
+  {id:'h1', tier:'hard', cat:'operations', type:'mcq',
+   prompt:'أوجد \\(]0,3[ \\cup [3,6]\\).',
+   options:['\\(]0,6]\\)','\\(]0,6[\\)','\\([0,6]\\)','فترتان منفصلتان'], correct:0,
+   exp:'الفترتان تتلاقيان عند 3 وهي مشمولة في الفترة الثانية، فتتصلان في فترة واحدة: مفتوحة عند 0 ومغلقة عند 6 → ]0,6]'},
+  {id:'h2', tier:'hard', cat:'operations', type:'mcq',
+   prompt:'أوجد متمم الفترة \\([2,7]\\) بالنسبة إلى \\(\\mathbb{R}\\).',
+   options:['\\(]-\\infty,2[ \\cup ]7,\\infty[\\)','\\(]-\\infty,2] \\cup [7,\\infty[\\)','\\([2,7]\\)','\\(\\mathbb{R}\\)'], correct:0,
+   exp:'المتمم هو كل ما هو خارج [2,7]، أي أصغر من 2 تمامًا أو أكبر من 7 تمامًا (بدون شمول 2 أو 7).'},
+  {id:'h3', tier:'hard', cat:'notation', type:'mcq',
+   prompt:'أي الفترات التالية تعبّر عن \\(\\{x : x\\in\\mathbb{R} , x \\le -1 \\text{ أو } x > 5\\}\\)؟',
+   options:['\\(]-\\infty,-1] \\cup ]5,\\infty[\\)','\\([-1,\\infty[ \\cup ]-\\infty,5]\\)','\\(]-\\infty,-1[ \\cup [5,\\infty[\\)','\\([-1,5]\\)'], correct:0,
+   exp:'x≤−1 تعني ]-∞,-1]، وx>5 تعني ]5,∞[، والعبارة "أو" تعني اتحاد الفترتين.'},
+  {id:'h4', tier:'hard', cat:'graphs', type:'match',
+   prompt:'طابق كل عملية بناتجها الصحيح:',
+   left:['\\([1,4] \\cap [3,7]\\)','\\(]1,4[ \\cap ]4,7[\\)','\\([1,4] \\cap [4,7]\\)'],
+   right:['\\([3,4]\\)','∅ (مجموعة خالية)','\\(\\{4\\}\\) نقطة واحدة'],
+   pairs:[0,1,2],
+   exp:'الأولى تتقاطع في [3,4]. الثانية لا يوجد بينهما مشترك عند 4 لأنه مستبعد من الطرفين. الثالثة يشتركان في النقطة 4 فقط.'},
+  {id:'h5', tier:'hard', cat:'operations', type:'fill',
+   prompt:'أوجد \\(]-2,2[ \\cap ]-\\infty,0]\\).',
+   accept:[']-2,0]',']-2 , 0]','(-2,0]'],
+   exp:'أكبر طرف أيسر هو −2 (مفتوح)، وأصغر طرف أيمن هو 0 (مغلق لأنه من الفترة الثانية)، فالناتج ]-2,0]'}
+];
+
+let quizQueue = [];
+let qIndex = 0;
+let scoreCount = 0;
+let answeredThisQ = false;
+let catStats = {types:{c:0,t:0}, notation:{c:0,t:0}, operations:{c:0,t:0}, graphs:{c:0,t:0}};
+let quizStartTime = null;
+
+let session = {lastScore:null, bestScore:null, attempts:0, weakTopic:null};
+
+function updateProgressMini(){
+  document.getElementById('statLast').textContent = session.lastScore===null ? '—' : session.lastScore+' / 15';
+  document.getElementById('statBest').textContent = session.bestScore===null ? '—' : session.bestScore+' / 15';
+  document.getElementById('statAttempts').textContent = session.attempts;
+  document.getElementById('statWeak').textContent = session.weakTopic ? CAT_NAMES[session.weakTopic] : '—';
+}
+updateProgressMini();
+
+function buildQueue(){
+  const easy = shuffle(bank.filter(q=>q.tier==='easy'));
+  const med = shuffle(bank.filter(q=>q.tier==='medium'));
+  const hard = shuffle(bank.filter(q=>q.tier==='hard'));
+  return [...easy, ...med, ...hard];
+}
+
+function startQuiz(){
+  quizQueue = buildQueue();
+  qIndex = 0; scoreCount = 0;
+  catStats = {types:{c:0,t:0}, notation:{c:0,t:0}, operations:{c:0,t:0}, graphs:{c:0,t:0}};
+  quizStartTime = Date.now();
+  document.getElementById('startBox').style.display='none';
+  document.getElementById('reportView').style.display='none';
+  document.getElementById('quizBox').style.display='block';
+  renderQuestion();
+}
+document.getElementById('btnStartQuiz').addEventListener('click', startQuiz);
+document.getElementById('btnRetry').addEventListener('click', startQuiz);
+document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+
+const tierLabel = {easy:'سهل', medium:'متوسط', hard:'صعب'};
+const tierClass = {easy:'tier-easy', medium:'tier-medium', hard:'tier-hard'};
+
+function renderQuestion(){
+  answeredThisQ = false;
+  const q = quizQueue[qIndex];
+  document.getElementById('qCounter').textContent = `سؤال ${qIndex+1} / ${quizQueue.length}`;
+  const badge = document.getElementById('qTierBadge');
+  badge.textContent = tierLabel[q.tier];
+  badge.className = 'badge-tier '+tierClass[q.tier];
+  document.getElementById('qCategoryTag').textContent = 'المهارة: '+CAT_NAMES[q.cat];
+  document.getElementById('qPrompt').innerHTML = '<span class="math">'+q.prompt+'</span>';
+  document.getElementById('qFeedback').className='feedback';
+  document.getElementById('qFeedback').innerHTML='';
+  document.getElementById('btnNext').style.display='none';
+
+  const body = document.getElementById('qBody');
+  body.innerHTML='';
+
+  if(q.type==='mcq'){
+    const wrap = document.createElement('div');
+    wrap.className='options';
+    q.options.forEach((opt, idx)=>{
+      const b = document.createElement('button');
+      b.className='opt-btn';
+      b.innerHTML = '<span class="math">'+opt+'</span>';
+      b.addEventListener('click', ()=>answerMcq(idx, wrap));
+      wrap.appendChild(b);
+    });
+    body.appendChild(wrap);
+  } else if(q.type==='fill'){
+    const row = document.createElement('div');
+    row.className='fill-row';
+    row.innerHTML = `<input type="text" id="fillInput" placeholder="اكتب الفترة هنا, مثال: [2,5[" />
+                      <button class="check-btn" id="fillCheck">تحقق</button>`;
+    body.appendChild(row);
+    document.getElementById('fillCheck').addEventListener('click', ()=>answerFill(q));
+    document.getElementById('fillInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') answerFill(q); });
+  } else if(q.type==='match'){
+    renderMatch(q, body);
+  }
+  renderMath(body);
+  renderMath(document.getElementById('qPrompt'));
+}
+
+function lockOptions(wrap){
+  wrap.querySelectorAll('.opt-btn').forEach(b=>b.disabled=true);
+}
+
+function recordAnswer(cat, isCorrect){
+  catStats[cat].t++;
+  if(isCorrect) catStats[cat].c++;
+}
+
+function showFeedback(isCorrect, expText){
+  const fb = document.getElementById('qFeedback');
+  fb.className = 'feedback show '+(isCorrect?'ok':'bad');
+  fb.innerHTML = (isCorrect?'✅ إجابة صحيحة! ':'❌ إجابة غير صحيحة. ') + '<span class="math">'+expText+'</span>';
+  renderMath(fb);
+  document.getElementById('btnNext').style.display='block';
+  if(isCorrect) scoreCount++;
+}
+
+function answerMcq(idx, wrap){
+  if(answeredThisQ) return;
+  answeredThisQ = true;
+  const q = quizQueue[qIndex];
+  const isCorrect = idx===q.correct;
+  lockOptions(wrap);
+  wrap.children[idx].classList.add(isCorrect?'correct':'wrong');
+  if(!isCorrect) wrap.children[q.correct].classList.add('correct');
+  recordAnswer(q.cat, isCorrect);
+  showFeedback(isCorrect, q.exp);
+}
+
+function normalizeFill(s){
+  return s.replace(/\s+/g,'').replace(/[（(]/g,'[').replace(/[)）]/g,']').toLowerCase();
+}
+function answerFill(q){
+  if(answeredThisQ) return;
+  const input = document.getElementById('fillInput');
+  const val = input.value.trim();
+  if(!val) return;
+  answeredThisQ = true;
+  const norm = normalizeFill(val);
+  const isCorrect = q.accept.some(a=>normalizeFill(a)===norm);
+  input.disabled = true;
+  document.getElementById('fillCheck').disabled = true;
+  recordAnswer(q.cat, isCorrect);
+  showFeedback(isCorrect, q.exp + (isCorrect?'':' — الإجابة الصحيحة: '+q.accept[0]));
+}
+
+function renderMatch(q, body){
+  const grid = document.createElement('div');
+  grid.className='match-grid';
+  const rightShuffledIdx = shuffle(q.right.map((_,i)=>i));
+  grid.innerHTML = `
+    <div class="match-col"><h4>العمود أ</h4><div id="matchLeft"></div></div>
+    <div class="match-col"><h4>العمود ب</h4><div id="matchRight"></div></div>
+  `;
+  body.appendChild(grid);
+  const leftCol = grid.querySelector('#matchLeft');
+  const rightCol = grid.querySelector('#matchRight');
+
+  q.left.forEach((txt, i)=>{
+    const d = document.createElement('div');
+    d.className='match-item'; d.dataset.i=i;
+    d.innerHTML = '<span class="math">'+txt+'</span>';
+    leftCol.appendChild(d);
+  });
+  rightShuffledIdx.forEach((origIdx)=>{
+    const d = document.createElement('div');
+    d.className='match-item'; d.dataset.i=origIdx;
+    d.innerHTML = '<span class="math">'+q.right[origIdx]+'</span>';
+    rightCol.appendChild(d);
+  });
+
+  let selLeft = null, selRight = null;
+  let correctPairs = 0, totalPairs = q.left.length, attemptsMade = 0;
+
+  function tryMatch(){
+    if(selLeft===null || selRight===null) return;
+    attemptsMade++;
+    const li = parseInt(selLeft.dataset.i), ri = parseInt(selRight.dataset.i);
+    const isMatch = li===ri;
+    if(isMatch){
+      selLeft.classList.remove('selected'); selRight.classList.remove('selected');
+      selLeft.classList.add('paired-correct'); selRight.classList.add('paired-correct');
+      selLeft.classList.add('locked'); selRight.classList.add('locked');
+      correctPairs++;
+    } else {
+      selLeft.classList.add('paired-wrong'); selRight.classList.add('paired-wrong');
+      setTimeout(()=>{
+        selLeft.classList.remove('selected','paired-wrong');
+        selRight.classList.remove('selected','paired-wrong');
+      }, 500);
+    }
+    selLeft=null; selRight=null;
+    if(correctPairs===totalPairs){
+      answeredThisQ = true;
+      const isCorrect = attemptsMade<=totalPairs; // كل المحاولات صحيحة من أول مرة
+      recordAnswer(q.cat, isCorrect);
+      showFeedback(isCorrect, q.exp);
+      grid.querySelectorAll('.match-item').forEach(it=>it.classList.add('locked'));
+    }
+  }
+
+  grid.querySelectorAll('.match-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      if(item.classList.contains('locked')) return;
+      const isLeft = item.parentElement.id==='matchLeft';
+      if(isLeft){
+        if(selLeft) selLeft.classList.remove('selected');
+        selLeft = item; item.classList.add('selected');
+      } else {
+        if(selRight) selRight.classList.remove('selected');
+        selRight = item; item.classList.add('selected');
+      }
+      tryMatch();
+    });
+  });
+}
+
+document.getElementById('btnNext').addEventListener('click', ()=>{
+  qIndex++;
+  if(qIndex>=quizQueue.length){
+    finishQuiz();
+  } else {
+    renderQuestion();
+  }
+});
+
+function finishQuiz(){
+  document.getElementById('quizBox').style.display='none';
+  document.getElementById('reportView').style.display='block';
+
+  const total = quizQueue.length;
+  const pct = Math.round((scoreCount/total)*100);
+  document.getElementById('reportScore').textContent = `${scoreCount} / ${total}`;
+  document.getElementById('reportPct').textContent = pct+'%';
+
+  const levelEl = document.getElementById('reportLevel');
+  let levelText, levelClass;
+  if(pct>=90){levelText='متميّز 🌟'; levelClass='lvl-3';}
+  else if(pct>=75){levelText='متفوق 🚀'; levelClass='lvl-2';}
+  else if(pct>=50){levelText='جيد 👍'; levelClass='lvl-1';}
+  else {levelText='مبتدئ 🌱'; levelClass='lvl-0';}
+  levelEl.textContent = levelText;
+  levelEl.className = 'level-chip '+levelClass;
+
+  // مخطط الأداء حسب المهارة
+  const chart = document.getElementById('barChart');
+  chart.innerHTML='';
+  let weakestCat=null, weakestPct=101;
+  Object.keys(catStats).forEach(cat=>{
+    const st = catStats[cat];
+    const p = st.t>0 ? Math.round((st.c/st.t)*100) : 0;
+    if(st.t>0 && p<weakestPct){weakestPct=p; weakestCat=cat;}
+    const row = document.createElement('div');
+    row.className='bar-row';
+    row.innerHTML = `<div class="name">${CAT_NAMES[cat]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${st.t>0?p:0}%;"></div></div>
+      <div class="pct-txt">${st.t>0?p+'%':'—'}</div>`;
+    chart.appendChild(row);
+  });
+
+  // توصيات
+  const rec = document.getElementById('recommendList');
+  rec.innerHTML='';
+  const recs = [];
+  Object.keys(catStats).forEach(cat=>{
+    const st = catStats[cat];
+    if(st.t>0 && (st.c/st.t) < 0.7){
+      recs.push('راجع قسم "'+CAT_NAMES[cat]+'" في تبويب "افهم" و"أمثلة" لتقوية هذه المهارة.');
+    }
+  });
+  if(recs.length===0){
+    recs.push('أداء ممتاز في كل المهارات! يمكنك تجربة الاختبار مرة أخرى لتثبيت المعلومات.');
+  }
+  recs.forEach(r=>{
+    const li = document.createElement('li');
+    li.textContent = r;
+    rec.appendChild(li);
+  });
+
+  // تحديث تقدم الجلسة
+  session.lastScore = scoreCount;
+  session.bestScore = session.bestScore===null ? scoreCount : Math.max(session.bestScore, scoreCount);
+  session.attempts++;
+  session.weakTopic = weakestCat;
+  updateProgressMini();
+}
+
+/* الرسم الرياضي عند تحميل الصفحة */
+window.addEventListener('load', ()=>{ renderMath(document.body); });
+document.addEventListener('DOMContentLoaded', ()=>{ renderMath(document.body); });
+
+})();
+</script>
+</body>
+</html>
