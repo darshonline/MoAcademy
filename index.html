@@ -14,9 +14,17 @@
   <aside class="spine" id="spine">
     <div class="spine-header">
       <span class="spine-title">دفتري الدراسي</span>
+      <label class="admin-switch">
+        <input type="checkbox" id="adminModeToggle">
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span class="switch-label">وضع الأدمن</span>
+      </label>
     </div>
     <nav id="yearsNav" class="years-nav"></nav>
-    <button class="results-tab" id="resultsBtn">📊 نتائجي</button>
+    <div class="spine-footer">
+      <button class="results-tab" id="resultsBtn">📊 نتائجي</button>
+      <button class="results-tab" id="settingsBtn">💾 البيانات والنسخ الاحتياطي</button>
+    </div>
   </aside>
 
   <main class="page" id="page">
@@ -29,6 +37,8 @@
     </div>
   </main>
 </div>
+
+<div id="modalRoot"></div>
 
 <script src="js/app.js"></script>
 </body>
