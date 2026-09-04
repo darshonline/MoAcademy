@@ -4,16 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>دفتري الدراسي</title>
+<script>
+  // تطبيق الوضع الداكن/الفاتح فورًا قبل ظهور الصفحة لتجنب الوميض
+  (function() {
+    var saved = localStorage.getItem('dafatri_theme');
+    var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<div class="app">
+<div class="app" id="app">
+  <button class="mobile-topbar-btn" id="mobileMenuBtn" aria-label="القائمة">☰</button>
+
   <aside class="spine" id="spine">
     <div class="spine-header">
-      <span class="spine-title">دفتري الدراسي</span>
+      <div class="spine-title-row">
+        <span class="spine-title">دفتري الدراسي</span>
+        <button class="theme-toggle" id="themeToggle" title="تبديل الوضع الداكن/الفاتح">🌙</button>
+      </div>
       <label class="admin-switch">
         <input type="checkbox" id="adminModeToggle">
         <span class="switch-track"><span class="switch-thumb"></span></span>
@@ -26,6 +39,7 @@
       <button class="results-tab" id="settingsBtn">💾 البيانات والنسخ الاحتياطي</button>
     </div>
   </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
   <main class="page" id="page">
     <div class="page-lines"></div>

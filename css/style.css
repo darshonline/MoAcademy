@@ -9,11 +9,32 @@
   --accent: #A63D40;
   --accent-soft: #E7C9C4;
   --good: #3F6D4E;
+  --good-bg: #DCEDE1;
   --bad: #A63D40;
+  --bad-bg: #F3DCDB;
   --card-bg: #FFFDF8;
+  --overlay: rgba(22, 35, 59, 0.55);
   --radius: 4px;
   --font-ui: 'Tajawal', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
+}
+
+[data-theme="dark"] {
+  --paper: #1B2029;
+  --paper-line: #343B49;
+  --ink: #EDEAE0;
+  --ink-soft: #A8A395;
+  --spine: #0E1420;
+  --spine-text: #E8E2D0;
+  --spine-text-dim: #7C879E;
+  --accent: #D9686B;
+  --accent-soft: #4A2E2F;
+  --good: #6FAE85;
+  --good-bg: #1E3226;
+  --bad: #D9686B;
+  --bad-bg: #3A2426;
+  --card-bg: #232A38;
+  --overlay: rgba(5, 8, 14, 0.7);
 }
 
 * { box-sizing: border-box; }
@@ -25,6 +46,10 @@ html, body {
   background: var(--spine);
   font-family: var(--font-ui);
   color: var(--ink);
+}
+
+body, .spine, .page, .content-card, .lesson-row, .modal-box, .settings-block, .tab-btn {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 button {
@@ -54,12 +79,55 @@ button {
 
 .spine-header { margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid var(--accent); }
 
+.spine-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .spine-title {
   font-weight: 900;
   font-size: 21px;
   letter-spacing: 0.5px;
-  display: block;
-  margin-bottom: 12px;
+}
+
+.theme-toggle {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--spine-text);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.16); }
+
+.mobile-topbar-btn {
+  display: none;
+  position: fixed;
+  top: 14px;
+  inset-inline-end: 16px;
+  z-index: 60;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--spine);
+  color: var(--spine-text);
+  border: 1px solid rgba(255,255,255,0.15);
+  font-size: 19px;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 40;
 }
 
 /* Admin toggle switch */
@@ -88,7 +156,7 @@ button {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: #fff;
+  background: #F2EEE4;
   transition: transform 0.2s ease;
 }
 .admin-switch input:checked + .switch-track { background: var(--accent); }
@@ -234,7 +302,7 @@ button {
   margin-bottom: 28px;
 }
 .tab-btn {
-  background: #EDE4CE;
+  background: var(--paper-line);
   border: 1px solid var(--paper-line);
   border-bottom: none;
   padding: 11px 22px;
@@ -244,6 +312,7 @@ button {
   border-radius: 8px 8px 0 0;
   position: relative;
   top: 2px;
+  white-space: nowrap;
 }
 .tab-btn.active {
   background: var(--card-bg);
@@ -312,12 +381,12 @@ button {
   padding: 11px 14px;
   cursor: pointer;
   font-size: 14.5px;
-  background: #FFFDF8;
+  background: var(--card-bg);
 }
 .quiz-option:hover { border-color: var(--accent); }
 .quiz-option.selected { border-color: var(--accent); background: var(--accent-soft); }
-.quiz-option.correct { border-color: var(--good); background: #DCEDE1; }
-.quiz-option.incorrect { border-color: var(--bad); background: #F3DCDB; }
+.quiz-option.correct { border-color: var(--good); background: var(--good-bg); }
+.quiz-option.incorrect { border-color: var(--bad); background: var(--bad-bg); }
 
 .btn-primary {
   background: var(--accent);
@@ -406,7 +475,7 @@ button {
   border-radius: var(--radius);
   font-family: var(--font-ui);
   font-size: 14.5px;
-  background: #fff;
+  background: var(--card-bg); color: var(--ink);
   color: var(--ink);
 }
 .field textarea { resize: vertical; min-height: 70px; line-height: 1.7; }
@@ -416,7 +485,7 @@ button {
   border: 1px solid var(--paper-line);
   border-radius: var(--radius);
   padding: 2px;
-  background: #fff;
+  background: var(--card-bg);
 }
 .field-hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
 
@@ -460,7 +529,7 @@ button {
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 12px;
-  background: #FFFDF8;
+  background: var(--card-bg);
 }
 .test-q-block > .field { margin-bottom: 10px; }
 .tq-option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -487,8 +556,56 @@ button {
 .settings-block p { color: var(--ink-soft); font-size: 13.5px; line-height: 1.7; }
 .settings-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 
+@media (max-width: 1024px) {
+  .page { padding: 32px 30px; }
+}
+
+/* Tablet / mobile: sidebar becomes an overlay drawer */
 @media (max-width: 760px) {
-  .app { flex-direction: column; }
-  .spine { width: 100%; height: auto; position: relative; }
-  .page { padding: 24px 18px; }
+  .mobile-topbar-btn { display: flex; align-items: center; justify-content: center; }
+
+  .app { display: block; }
+
+  .spine {
+    position: fixed;
+    top: 0;
+    inset-inline-end: 0;
+    height: 100vh;
+    width: min(300px, 82vw);
+    max-width: 82vw;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 50;
+    box-shadow: -8px 0 24px rgba(0,0,0,0.25);
+  }
+  .app.sidebar-open .spine { transform: translateX(0); }
+  .app.sidebar-open .sidebar-backdrop { display: block; }
+
+  .page { padding: 72px 18px 40px; }
+
+  .subject-header { flex-wrap: wrap; }
+  .subject-header h1 { font-size: 24px; }
+
+  .tabbar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+
+  .lesson-row { flex-wrap: wrap; gap: 8px; }
+  .admin-actions { width: 100%; justify-content: flex-end; }
+
+  .results-table { display: block; overflow-x: auto; white-space: nowrap; }
+
+  .modal-overlay { padding: 0; align-items: stretch; }
+  .modal-box { max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; }
+
+  .settings-actions { flex-direction: column; align-items: stretch; }
+  .settings-actions .btn-primary,
+  .settings-actions .btn-secondary,
+  .settings-actions .btn-danger { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .page { padding: 68px 14px 32px; }
+  .content-card, .settings-block { padding: 16px; }
+  .welcome h1, .subject-header h1 { font-size: 21px; }
+  .tab-btn { padding: 10px 14px; font-size: 13.5px; }
+  .modal-head, .modal-body, .modal-foot { padding: 14px 16px; }
 }

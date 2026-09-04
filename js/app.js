@@ -9,11 +9,12 @@ let APPDATA = { years: [] };
 let currentYearId = null;
 let currentSubjectId = null;
 let currentTab = 'explanation';
-let adminMode = localStorage.getItem('dafatri_adminmode') === '1';
+let adminMode = false; // يبدأ دائمًا مقفول؛ لازم كلمة مرور لتفعيله كل جلسة
 
 const $page = document.getElementById('pageContent');
 const $nav = document.getElementById('yearsNav');
 const $modalRoot = document.getElementById('modalRoot');
+const $app = document.getElementById('app');
 
 // ===== Data access helpers =====
 const getYear = (id) => APPDATA.years.find(y => y.id === id);
@@ -67,6 +68,72 @@ function getResults() { return JSON.parse(localStorage.getItem('dafatri_results'
 function clearResults() { localStorage.removeItem('dafatri_results'); }
 
 // ===================================================================
+// حماية وضع الأدمن بكلمة مرور
+// ملاحظة: الموقع Static بالكامل، فده حماية بسيطة تمنع الاستخدام العرضي
+// (زي طفل بيفتح الموقع)، مش حماية أمنية قوية بمعنى الكلمة.
+// ===================================================================
+async function hashText(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function getAdminHash() { return localStorage.getItem('dafatri_admin_hash'); }
+async function setAdminPassword(pw) { localStorage.setItem('dafatri_admin_hash', await hashText(pw)); }
+function clearAdminPassword() { localStorage.removeItem('dafatri_admin_hash'); }
+
+async function requestAdminAccess() {
+  const existingHash = getAdminHash();
+
+  if (!existingHash) {
+    // أول مرة: نطلب تحديد كلمة مرور
+    return new Promise((resolve) => {
+      openModal({
+        title: 'تحديد كلمة مرور وضع الأدمن',
+        bodyHtml: `
+          <p style="color:var(--ink-soft);font-size:13.5px;margin-top:0">
+            دي أول مرة تفعّل فيها وضع الأدمن. اختار كلمة مرور هتُطلب منك كل مرة تفعّل فيها الوضع ده.
+          </p>
+          <div class="field"><label>كلمة المرور</label><input type="password" id="fPw1" placeholder="6 أحرف على الأقل"></div>
+          <div class="field"><label>تأكيد كلمة المرور</label><input type="password" id="fPw2"></div>
+        `,
+        saveLabel: 'حفظ وتفعيل',
+        onSave: (body) => {
+          const pw1 = body.querySelector('#fPw1').value;
+          const pw2 = body.querySelector('#fPw2').value;
+          if (pw1.length < 4) { alert('كلمة المرور قصيرة جدًا (4 أحرف على الأقل)'); return false; }
+          if (pw1 !== pw2) { alert('كلمتا المرور غير متطابقتين'); return false; }
+          setAdminPassword(pw1).then(() => resolve(true));
+        }
+      });
+      // لو المستخدم ألغى المودال، لازم نرجّع false
+      document.getElementById('modalOverlay')?.addEventListener('click', function handler(e) {
+        if (e.target.id === 'modalOverlay') resolve(false);
+      });
+      document.getElementById('modalCloseBtn')?.addEventListener('click', () => resolve(false));
+      document.getElementById('modalCancelBtn')?.addEventListener('click', () => resolve(false));
+    });
+  }
+
+  // فيه كلمة مرور محفوظة: نطلبها
+  return new Promise((resolve) => {
+    openModal({
+      title: 'دخول وضع الأدمن',
+      bodyHtml: `<div class="field"><label>كلمة المرور</label><input type="password" id="fPwCheck" autofocus></div>`,
+      saveLabel: 'دخول',
+      onSave: async (body) => {
+        const pw = body.querySelector('#fPwCheck').value;
+        const hash = await hashText(pw);
+        if (hash !== existingHash) { alert('كلمة المرور غير صحيحة'); return false; }
+        resolve(true);
+      }
+    });
+    document.getElementById('modalOverlay')?.addEventListener('click', (e) => { if (e.target.id === 'modalOverlay') resolve(false); });
+    document.getElementById('modalCloseBtn')?.addEventListener('click', () => resolve(false));
+    document.getElementById('modalCancelBtn')?.addEventListener('click', () => resolve(false));
+  });
+}
+
+// ===================================================================
 // Modal system
 // ===================================================================
 function openModal({ title, bodyHtml, onMount, onSave, saveLabel = 'حفظ', danger = false }) {
@@ -93,8 +160,12 @@ function openModal({ title, bodyHtml, onMount, onSave, saveLabel = 'حفظ', dan
   });
   if (onMount) onMount(document.getElementById('modalBody'));
   document.getElementById('modalSaveBtn').addEventListener('click', () => {
-    const ok = onSave(document.getElementById('modalBody'));
-    if (ok !== false) close();
+    const result = onSave(document.getElementById('modalBody'));
+    if (result && typeof result.then === 'function') {
+      result.then(ok => { if (ok !== false) close(); });
+    } else if (result !== false) {
+      close();
+    }
   });
 }
 
@@ -194,7 +265,7 @@ function renderSidebar() {
 
   // ----- wire events -----
   if (adminMode) {
-    document.getElementById('addYearBtn').addEventListener('click', openYearModal);
+    document.getElementById('addYearBtn').addEventListener('click', () => openYearModal(null));
   }
   document.querySelectorAll('.year-toggle').forEach((btn, idx) => {
     btn.addEventListener('click', () => {
@@ -209,6 +280,7 @@ function renderSidebar() {
       currentTab = 'explanation';
       renderSidebar();
       renderSubjectPage();
+      closeMobileSidebar();
     });
   });
   document.querySelectorAll('[data-edit-year]').forEach(btn => {
@@ -251,15 +323,45 @@ function renderSidebar() {
 }
 
 document.getElementById('adminModeToggle').checked = adminMode;
-document.getElementById('adminModeToggle').addEventListener('change', (e) => {
-  adminMode = e.target.checked;
-  localStorage.setItem('dafatri_adminmode', adminMode ? '1' : '0');
+document.getElementById('adminModeToggle').addEventListener('change', async (e) => {
+  const wantsOn = e.target.checked;
+  if (!wantsOn) {
+    adminMode = false;
+    renderSidebar();
+    if (currentSubjectId) renderSubjectPage(); else renderWelcome();
+    return;
+  }
+  // إلغاء تفعيل الصندوق مؤقتًا لحد ما ندخل كلمة المرور بنجاح
+  e.target.checked = false;
+  const granted = await requestAdminAccess();
+  adminMode = granted;
+  e.target.checked = granted;
   renderSidebar();
   if (currentSubjectId) renderSubjectPage(); else renderWelcome();
 });
 
-document.getElementById('resultsBtn').addEventListener('click', renderResultsPage);
-document.getElementById('settingsBtn').addEventListener('click', renderSettingsPage);
+document.getElementById('resultsBtn').addEventListener('click', () => { renderResultsPage(); closeMobileSidebar(); });
+document.getElementById('settingsBtn').addEventListener('click', () => { renderSettingsPage(); closeMobileSidebar(); });
+
+// ===== Theme toggle =====
+const $themeToggle = document.getElementById('themeToggle');
+function applyThemeIcon() {
+  const theme = document.documentElement.getAttribute('data-theme');
+  $themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+applyThemeIcon();
+$themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('dafatri_theme', next);
+  applyThemeIcon();
+});
+
+// ===== Mobile sidebar drawer =====
+function closeMobileSidebar() { $app.classList.remove('sidebar-open'); }
+document.getElementById('mobileMenuBtn').addEventListener('click', () => $app.classList.toggle('sidebar-open'));
+document.getElementById('sidebarBackdrop').addEventListener('click', closeMobileSidebar);
 
 // ===================================================================
 // Year / Subject modals
@@ -750,6 +852,15 @@ function renderSettingsPage() {
     </div>
 
     <div class="settings-block">
+      <h3>كلمة مرور وضع الأدمن</h3>
+      <p>${getAdminHash() ? 'وضع الأدمن محمي حاليًا بكلمة مرور. لازم تدخلها كل مرة تفعّل فيها وضع الأدمن.' : 'مفيش كلمة مرور متحددة بعد — هتُطلب منك تحديد واحدة أول مرة تفعّل فيها وضع الأدمن.'}</p>
+      <div class="settings-actions">
+        <button class="btn-secondary" id="changePwBtn">${getAdminHash() ? 'تغيير كلمة المرور' : 'تحديد كلمة مرور الآن'}</button>
+        ${getAdminHash() ? '<button class="btn-danger" id="removePwBtn">إلغاء كلمة المرور</button>' : ''}
+      </div>
+    </div>
+
+    <div class="settings-block">
       <h3>استعادة البيانات الافتراضية</h3>
       <p>بيمسح كل التعديلات اللي عملتها ويرجّع البيانات الأصلية اللي جاية من ملفات المشروع. استخدمها بحذر.</p>
       <div class="settings-actions">
@@ -794,6 +905,42 @@ function renderSettingsPage() {
   document.getElementById('clearResultsBtn').addEventListener('click', () => {
     if (confirm('متأكد من مسح كل نتائج الاختبارات؟')) { clearResults(); alert('تم المسح.'); }
   });
+
+  document.getElementById('changePwBtn').addEventListener('click', () => {
+    const hasExisting = !!getAdminHash();
+    openModal({
+      title: hasExisting ? 'تغيير كلمة مرور وضع الأدمن' : 'تحديد كلمة مرور وضع الأدمن',
+      bodyHtml: `
+        ${hasExisting ? `<div class="field"><label>كلمة المرور الحالية</label><input type="password" id="fPwOld"></div>` : ''}
+        <div class="field"><label>كلمة المرور الجديدة</label><input type="password" id="fPwNew1" placeholder="4 أحرف على الأقل"></div>
+        <div class="field"><label>تأكيد كلمة المرور الجديدة</label><input type="password" id="fPwNew2"></div>
+      `,
+      saveLabel: 'حفظ',
+      onSave: async (body) => {
+        if (hasExisting) {
+          const old = body.querySelector('#fPwOld').value;
+          if ((await hashText(old)) !== getAdminHash()) { alert('كلمة المرور الحالية غير صحيحة'); return false; }
+        }
+        const n1 = body.querySelector('#fPwNew1').value;
+        const n2 = body.querySelector('#fPwNew2').value;
+        if (n1.length < 4) { alert('كلمة المرور قصيرة جدًا (4 أحرف على الأقل)'); return false; }
+        if (n1 !== n2) { alert('كلمتا المرور غير متطابقتين'); return false; }
+        await setAdminPassword(n1);
+        alert('تم حفظ كلمة المرور.');
+        renderSettingsPage();
+      }
+    });
+  });
+
+  const removePwBtn = document.getElementById('removePwBtn');
+  if (removePwBtn) {
+    removePwBtn.addEventListener('click', () => {
+      if (confirm('هيبقى أي حد يقدر يفعّل وضع الأدمن من غير كلمة مرور. متأكد؟')) {
+        clearAdminPassword();
+        renderSettingsPage();
+      }
+    });
+  }
 
   document.getElementById('resetDefaultsBtn').addEventListener('click', async () => {
     if (confirm('هيتم مسح كل تعديلاتك واستعادة البيانات الأصلية. متأكد؟')) {
