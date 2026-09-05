@@ -1,15 +1,22 @@
 // ===================================================================
 // دفتري الدراسي — منطق التطبيق
-// نموذج البيانات: بعد أول تحميل، كل البيانات بتتخزن وتتعدل في localStorage
-// مفتاح dafatri_data. ملفات data/*.json بتستخدم فقط "كبذرة" أول مرة،
-// أو عند الضغط على "استعادة البيانات الافتراضية".
+// نموذج البيانات: كل البيانات (السنوات/المواد/الدروس) متخزنة في Supabase
+// في جدول app_data (صف واحد id='main' فيه JSON كامل). كده أي تعديل
+// من أي جهاز بيظهر فورًا على كل الأجهزة التانية.
+// تسجيل دخول الأدمن بيستخدم Supabase Auth الحقيقي (إيميل + كلمة مرور).
 // ===================================================================
+
+const SUPABASE_CONFIGURED = typeof SUPABASE_URL !== 'undefined'
+  && SUPABASE_URL && SUPABASE_URL.indexOf('YOUR_SUPABASE_URL') === -1;
+
+const sb = SUPABASE_CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 let APPDATA = { years: [] };
 let currentYearId = null;
 let currentSubjectId = null;
 let currentTab = 'explanation';
-let adminMode = false; // يبدأ دائمًا مقفول؛ لازم كلمة مرور لتفعيله كل جلسة
+let adminMode = false;
+let currentUserEmail = null;
 
 const $page = document.getElementById('pageContent');
 const $nav = document.getElementById('yearsNav');
@@ -28,8 +35,21 @@ const getLesson = (yearId, subjId, lessonId) => {
 };
 const slug = (prefix) => prefix + '-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
-function saveData() {
-  localStorage.setItem('dafatri_data', JSON.stringify(APPDATA));
+// ===================================================================
+// طبقة البيانات (Supabase)
+// ===================================================================
+async function loadAllData() {
+  const { data, error } = await sb.from('app_data').select('data').eq('id', 'main').maybeSingle();
+  if (error) throw error;
+  APPDATA = (data && data.data) ? data.data : { years: [] };
+}
+
+async function saveData() {
+  const { error } = await sb.from('app_data').upsert({ id: 'main', data: APPDATA, updated_at: new Date().toISOString() });
+  if (error) {
+    alert('حصل خطأ أثناء حفظ البيانات على السيرفر: ' + error.message);
+    throw error;
+  }
 }
 
 async function fetchSeedData() {
@@ -43,87 +63,57 @@ async function fetchSeedData() {
   return { years };
 }
 
-async function loadAllData() {
-  const stored = localStorage.getItem('dafatri_data');
-  if (stored) {
-    APPDATA = JSON.parse(stored);
-    return;
-  }
+// يحمّل البيانات التجريبية الأصلية من ملفات المشروع ويرفعها لـ Supabase
+// (يُستخدم أول مرة، أو للاستعادة لو حابب)
+async function seedFromDefaults() {
   APPDATA = await fetchSeedData();
-  saveData();
+  await saveData();
 }
 
-async function resetToDefaults() {
-  APPDATA = await fetchSeedData();
-  saveData();
+// ===== Results (Supabase) =====
+async function saveResult(subjectId, subjectName, lessonId, lessonTitle, score, total) {
+  const { error } = await sb.from('quiz_results').insert({
+    subject_id: subjectId, subject_name: subjectName,
+    lesson_id: lessonId, lesson_title: lessonTitle, score, total
+  });
+  if (error) alert('تعذّر حفظ النتيجة: ' + error.message);
 }
-
-// ===== Results (localStorage) =====
-function saveResult(subjectId, subjectName, lessonId, lessonTitle, score, total) {
-  const results = JSON.parse(localStorage.getItem('dafatri_results') || '[]');
-  results.unshift({ subjectId, subjectName, lessonId, lessonTitle, score, total, date: new Date().toISOString() });
-  localStorage.setItem('dafatri_results', JSON.stringify(results));
+async function getResults() {
+  const { data, error } = await sb.from('quiz_results').select('*').order('created_at', { ascending: false });
+  if (error) { alert('تعذّر تحميل النتائج: ' + error.message); return []; }
+  return data || [];
 }
-function getResults() { return JSON.parse(localStorage.getItem('dafatri_results') || '[]'); }
-function clearResults() { localStorage.removeItem('dafatri_results'); }
+async function clearResults() {
+  const { error } = await sb.from('quiz_results').delete().not('id', 'is', null);
+  if (error) alert('تعذّر مسح النتائج: ' + error.message);
+}
 
 // ===================================================================
-// حماية وضع الأدمن بكلمة مرور
-// ملاحظة: الموقع Static بالكامل، فده حماية بسيطة تمنع الاستخدام العرضي
-// (زي طفل بيفتح الموقع)، مش حماية أمنية قوية بمعنى الكلمة.
+// حماية وضع الأدمن — Supabase Auth حقيقي (إيميل + كلمة مرور)
+// بيشتغل بنفس الحساب على أي جهاز، ومفيش داعي لكلمة مرور منفصلة لكل جهاز.
 // ===================================================================
-async function hashText(text) {
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+async function getSession() {
+  const { data } = await sb.auth.getSession();
+  return data.session;
 }
-function getAdminHash() { return localStorage.getItem('dafatri_admin_hash'); }
-async function setAdminPassword(pw) { localStorage.setItem('dafatri_admin_hash', await hashText(pw)); }
-function clearAdminPassword() { localStorage.removeItem('dafatri_admin_hash'); }
 
 async function requestAdminAccess() {
-  const existingHash = getAdminHash();
-
-  if (!existingHash) {
-    // أول مرة: نطلب تحديد كلمة مرور
-    return new Promise((resolve) => {
-      openModal({
-        title: 'تحديد كلمة مرور وضع الأدمن',
-        bodyHtml: `
-          <p style="color:var(--ink-soft);font-size:13.5px;margin-top:0">
-            دي أول مرة تفعّل فيها وضع الأدمن. اختار كلمة مرور هتُطلب منك كل مرة تفعّل فيها الوضع ده.
-          </p>
-          <div class="field"><label>كلمة المرور</label><input type="password" id="fPw1" placeholder="6 أحرف على الأقل"></div>
-          <div class="field"><label>تأكيد كلمة المرور</label><input type="password" id="fPw2"></div>
-        `,
-        saveLabel: 'حفظ وتفعيل',
-        onSave: (body) => {
-          const pw1 = body.querySelector('#fPw1').value;
-          const pw2 = body.querySelector('#fPw2').value;
-          if (pw1.length < 4) { alert('كلمة المرور قصيرة جدًا (4 أحرف على الأقل)'); return false; }
-          if (pw1 !== pw2) { alert('كلمتا المرور غير متطابقتين'); return false; }
-          setAdminPassword(pw1).then(() => resolve(true));
-        }
-      });
-      // لو المستخدم ألغى المودال، لازم نرجّع false
-      document.getElementById('modalOverlay')?.addEventListener('click', function handler(e) {
-        if (e.target.id === 'modalOverlay') resolve(false);
-      });
-      document.getElementById('modalCloseBtn')?.addEventListener('click', () => resolve(false));
-      document.getElementById('modalCancelBtn')?.addEventListener('click', () => resolve(false));
-    });
-  }
-
-  // فيه كلمة مرور محفوظة: نطلبها
   return new Promise((resolve) => {
     openModal({
       title: 'دخول وضع الأدمن',
-      bodyHtml: `<div class="field"><label>كلمة المرور</label><input type="password" id="fPwCheck" autofocus></div>`,
+      bodyHtml: `
+        <div class="field"><label>البريد الإلكتروني</label><input type="text" id="fEmail" autocomplete="username"></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" id="fPwCheck" autocomplete="current-password"></div>
+        <p class="field-hint">لازم يكون الحساب ده متعمل مسبقًا من لوحة تحكم Supabase (Authentication → Users).</p>
+      `,
       saveLabel: 'دخول',
       onSave: async (body) => {
-        const pw = body.querySelector('#fPwCheck').value;
-        const hash = await hashText(pw);
-        if (hash !== existingHash) { alert('كلمة المرور غير صحيحة'); return false; }
+        const email = body.querySelector('#fEmail').value.trim();
+        const password = body.querySelector('#fPwCheck').value;
+        if (!email || !password) { alert('من فضلك اكتب البريد الإلكتروني وكلمة المرور'); return false; }
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) { alert('بيانات الدخول غير صحيحة: ' + error.message); return false; }
+        currentUserEmail = data.user.email;
         resolve(true);
       }
     });
@@ -131,6 +121,12 @@ async function requestAdminAccess() {
     document.getElementById('modalCloseBtn')?.addEventListener('click', () => resolve(false));
     document.getElementById('modalCancelBtn')?.addEventListener('click', () => resolve(false));
   });
+}
+
+async function signOutAdmin() {
+  await sb.auth.signOut();
+  currentUserEmail = null;
+  adminMode = false;
 }
 
 // ===================================================================
@@ -252,7 +248,6 @@ function renderSidebar() {
       list.appendChild(addSubjLi);
     }
 
-    // keep open state if this year currently active
     if (currentYearId === year.id) {
       row.querySelector('.year-toggle').classList.add('open');
       list.classList.add('open');
@@ -263,11 +258,10 @@ function renderSidebar() {
     $nav.appendChild(block);
   });
 
-  // ----- wire events -----
   if (adminMode) {
     document.getElementById('addYearBtn').addEventListener('click', () => openYearModal(null));
   }
-  document.querySelectorAll('.year-toggle').forEach((btn, idx) => {
+  document.querySelectorAll('.year-toggle').forEach((btn) => {
     btn.addEventListener('click', () => {
       btn.classList.toggle('open');
       btn.closest('.year-row').nextElementSibling.classList.toggle('open');
@@ -287,13 +281,13 @@ function renderSidebar() {
     btn.addEventListener('click', (e) => { e.stopPropagation(); openYearModal(getYear(btn.dataset.editYear)); });
   });
   document.querySelectorAll('[data-delete-year]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const year = getYear(btn.dataset.deleteYear);
       if (confirm(`متأكد إنك عايز تحذف "${year.name}" وكل المواد والدروس اللي جواها؟`)) {
         APPDATA.years = APPDATA.years.filter(y => y.id !== year.id);
         if (currentYearId === year.id) { currentYearId = null; currentSubjectId = null; renderWelcome(); }
-        saveData();
+        await saveData();
         renderSidebar();
       }
     });
@@ -308,30 +302,28 @@ function renderSidebar() {
     });
   });
   document.querySelectorAll('[data-delete-subject]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const year = getYear(btn.dataset.subjectYear);
       const subj = getSubject(btn.dataset.subjectYear, btn.dataset.deleteSubject);
       if (confirm(`متأكد إنك عايز تحذف مادة "${subj.name}" وكل دروسها؟`)) {
         year.subjects = year.subjects.filter(s => s.id !== subj.id);
         if (currentSubjectId === subj.id) { currentSubjectId = null; renderWelcome(); }
-        saveData();
+        await saveData();
         renderSidebar();
       }
     });
   });
 }
 
-document.getElementById('adminModeToggle').checked = adminMode;
 document.getElementById('adminModeToggle').addEventListener('change', async (e) => {
   const wantsOn = e.target.checked;
   if (!wantsOn) {
-    adminMode = false;
+    await signOutAdmin();
     renderSidebar();
     if (currentSubjectId) renderSubjectPage(); else renderWelcome();
     return;
   }
-  // إلغاء تفعيل الصندوق مؤقتًا لحد ما ندخل كلمة المرور بنجاح
   e.target.checked = false;
   const granted = await requestAdminAccess();
   adminMode = granted;
@@ -376,7 +368,7 @@ function openYearModal(year) {
         <input type="text" id="fYearName" value="${escapeAttr(year ? year.name : '')}" placeholder="مثال: الصف الثاني الإعدادي">
       </div>
     `,
-    onSave: (body) => {
+    onSave: async (body) => {
       const name = body.querySelector('#fYearName').value.trim();
       if (!name) { alert('من فضلك اكتب اسم السنة'); return false; }
       if (isNew) {
@@ -384,7 +376,7 @@ function openYearModal(year) {
       } else {
         year.name = name;
       }
-      saveData();
+      await saveData();
       renderSidebar();
     }
   });
@@ -406,7 +398,7 @@ function openSubjectModal(yearId, subject) {
         <input type="color" id="fSubjColor" value="${color}">
       </div>
     `,
-    onSave: (body) => {
+    onSave: async (body) => {
       const name = body.querySelector('#fSubjName').value.trim();
       const col = body.querySelector('#fSubjColor').value;
       if (!name) { alert('من فضلك اكتب اسم المادة'); return false; }
@@ -417,7 +409,7 @@ function openSubjectModal(yearId, subject) {
         subject.name = name;
         subject.color = col;
       }
-      saveData();
+      await saveData();
       renderSidebar();
       if (currentSubjectId === (subject && subject.id)) renderSubjectPage();
     }
@@ -509,11 +501,11 @@ function renderTabContent() {
       });
     });
     container.querySelectorAll('[data-delete]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (confirm('متأكد من حذف الدرس؟')) {
           subj.lessons = subj.lessons.filter(l => l.id !== btn.dataset.delete);
-          saveData();
+          await saveData();
           renderTabContent();
         }
       });
@@ -598,7 +590,7 @@ function renderQuiz(lesson) {
     });
   });
 
-  document.getElementById('submitQuiz').addEventListener('click', () => {
+  document.getElementById('submitQuiz').addEventListener('click', async () => {
     let score = 0;
     questions.forEach((q, qi) => {
       const chosen = answers[qi];
@@ -612,12 +604,15 @@ function renderQuiz(lesson) {
     });
 
     const subj = getSubject(currentYearId, currentSubjectId);
-    saveResult(subj.id, subj.name, lesson.id, lesson.title, score, questions.length);
+    const submitBtn = document.getElementById('submitQuiz');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جارِ الحفظ...';
+    await saveResult(subj.id, subj.name, lesson.id, lesson.title, score, questions.length);
 
     const banner = document.createElement('div');
     banner.className = 'score-banner ' + (score / questions.length >= 0.6 ? 'good' : 'bad');
     banner.textContent = `نتيجتك: ${score} من ${questions.length}`;
-    document.getElementById('submitQuiz').replaceWith(banner);
+    submitBtn.replaceWith(banner);
   });
 }
 
@@ -683,14 +678,13 @@ function openLessonModal(lesson) {
       wireTestQuestions(body);
       document.getElementById('addTestQBtn').addEventListener('click', () => {
         const container = document.getElementById('testQContainer');
-        const qi = container.children.length;
         const div = document.createElement('div');
         div.innerHTML = testQuestionBlockHtml({ question: '', options: ['', ''], correctIndex: 0 }, Date.now());
         container.appendChild(div.firstElementChild);
         wireTestQuestions(body);
       });
     },
-    onSave: (body) => {
+    onSave: async (body) => {
       const title = body.querySelector('#fTitle').value.trim();
       if (!title) { alert('من فضلك اكتب عنوان الدرس'); return false; }
 
@@ -725,7 +719,7 @@ function openLessonModal(lesson) {
         lesson.review = review;
         lesson.test = { durationMinutes, questions };
       }
-      saveData();
+      await saveData();
       renderTabContent();
     }
   });
@@ -777,7 +771,6 @@ function wireTestQuestions(scopeEl) {
     wireOptionRemove(optionsWrap, qkey);
 
     block.querySelector('[data-remove-question]').onclick = () => {
-      if (scopeEl.querySelectorAll('.test-q-block').length <= 0) return;
       block.remove();
     };
   });
@@ -787,7 +780,6 @@ function wireOptionRemove(optionsWrap, qkey) {
     btn.onclick = () => {
       if (optionsWrap.children.length <= 2) { alert('لازم يفضل اختيارين على الأقل'); return; }
       btn.closest('.tq-option-row').remove();
-      // re-index radio values
       optionsWrap.querySelectorAll('.tq-option-row').forEach((row, idx) => {
         row.querySelector('input[type="radio"]').value = idx;
       });
@@ -798,20 +790,21 @@ function wireOptionRemove(optionsWrap, qkey) {
 // ===================================================================
 // Results page
 // ===================================================================
-function renderResultsPage() {
-  const results = getResults();
+async function renderResultsPage() {
+  $page.innerHTML = `<div class="empty-state">جارِ تحميل النتائج...</div>`;
+  const rows = await getResults();
   $page.innerHTML = `
     <h1 style="font-size:26px;font-weight:900;margin-bottom:20px">نتائجي</h1>
-    ${results.length === 0 ? '<div class="empty-state">لسه معملتش أي اختبار.</div>' : `
+    ${rows.length === 0 ? '<div class="empty-state">لسه معملتش أي اختبار.</div>' : `
       <table class="results-table">
         <thead><tr><th>المادة</th><th>الدرس</th><th>النتيجة</th><th>التاريخ</th></tr></thead>
         <tbody>
-          ${results.map(r => `
+          ${rows.map(r => `
             <tr>
-              <td>${escapeHtml(r.subjectName)}</td>
-              <td>${escapeHtml(r.lessonTitle)}</td>
+              <td>${escapeHtml(r.subject_name)}</td>
+              <td>${escapeHtml(r.lesson_title)}</td>
               <td class="score">${r.score} / ${r.total}</td>
-              <td>${new Date(r.date).toLocaleDateString('ar-EG')}</td>
+              <td>${new Date(r.created_at).toLocaleDateString('ar-EG')}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -828,8 +821,15 @@ function renderSettingsPage() {
     <h1 style="font-size:26px;font-weight:900;margin-bottom:20px">البيانات والنسخ الاحتياطي</h1>
 
     <div class="settings-block">
+      <h3>حالة الاتصال بقاعدة البيانات</h3>
+      <p>البيانات كلها متزامنة الآن عبر Supabase — أي تعديل بيظهر فورًا على كل الأجهزة اللي بتفتح نفس رابط الموقع.</p>
+      ${currentUserEmail ? `<p>مسجّل الدخول بحساب: <strong>${escapeHtml(currentUserEmail)}</strong></p>
+        <div class="settings-actions"><button class="btn-secondary" id="signOutBtn">تسجيل الخروج</button></div>` : ''}
+    </div>
+
+    <div class="settings-block">
       <h3>تنزيل نسخة احتياطية</h3>
-      <p>هينزل عندك ملف واحد فيه كل السنوات والمواد والدروس. احتفظ بيه في مكان آمن، أو استخدمه لنقل بياناتك لمتصفح أو جهاز تاني.</p>
+      <p>هينزل عندك ملف واحد فيه كل السنوات والمواد والدروس، كنسخة احتياطية إضافية بجانب Supabase.</p>
       <div class="settings-actions">
         <button class="btn-primary" id="downloadBackupBtn">⬇ تنزيل نسخة احتياطية</button>
       </div>
@@ -837,7 +837,7 @@ function renderSettingsPage() {
 
     <div class="settings-block">
       <h3>استعادة من نسخة احتياطية</h3>
-      <p>اختر ملف نسخة احتياطية سبق تنزيله. هيتم استبدال كل البيانات الحالية بالبيانات الموجودة في الملف.</p>
+      <p>اختر ملف نسخة احتياطية سبق تنزيله. هيتم استبدال كل البيانات الحالية على Supabase بمحتوى الملف (لازم تكون مسجّل دخول كأدمن).</p>
       <div class="settings-actions">
         <input type="file" id="restoreFileInput" accept="application/json">
       </div>
@@ -851,18 +851,19 @@ function renderSettingsPage() {
       </div>
     </div>
 
+    ${currentUserEmail ? `
     <div class="settings-block">
-      <h3>كلمة مرور وضع الأدمن</h3>
-      <p>${getAdminHash() ? 'وضع الأدمن محمي حاليًا بكلمة مرور. لازم تدخلها كل مرة تفعّل فيها وضع الأدمن.' : 'مفيش كلمة مرور متحددة بعد — هتُطلب منك تحديد واحدة أول مرة تفعّل فيها وضع الأدمن.'}</p>
+      <h3>تغيير كلمة مرور الأدمن</h3>
+      <p>هتتغير كلمة المرور بتاعة حسابك، وهتستخدمها في تسجيل الدخول من أي جهاز.</p>
       <div class="settings-actions">
-        <button class="btn-secondary" id="changePwBtn">${getAdminHash() ? 'تغيير كلمة المرور' : 'تحديد كلمة مرور الآن'}</button>
-        ${getAdminHash() ? '<button class="btn-danger" id="removePwBtn">إلغاء كلمة المرور</button>' : ''}
+        <button class="btn-secondary" id="changePwBtn">تغيير كلمة المرور</button>
       </div>
     </div>
+    ` : ''}
 
     <div class="settings-block">
       <h3>استعادة البيانات الافتراضية</h3>
-      <p>بيمسح كل التعديلات اللي عملتها ويرجّع البيانات الأصلية اللي جاية من ملفات المشروع. استخدمها بحذر.</p>
+      <p>بيمسح كل التعديلات اللي عملتها ويرجّع البيانات الأصلية اللي جاية من ملفات المشروع (لازم تكون مسجّل دخول كأدمن). استخدمها بحذر.</p>
       <div class="settings-actions">
         <button class="btn-danger" id="resetDefaultsBtn">استعادة البيانات الافتراضية</button>
       </div>
@@ -887,64 +888,62 @@ function renderSettingsPage() {
       try {
         const parsed = JSON.parse(reader.result);
         if (!parsed.years) throw new Error('invalid');
-        if (confirm('هيتم استبدال كل البيانات الحالية بمحتوى الملف. متأكد؟')) {
+        if (confirm('هيتم استبدال كل البيانات الحالية على Supabase بمحتوى الملف. متأكد؟')) {
           APPDATA = parsed;
-          saveData();
-          currentYearId = null; currentSubjectId = null;
-          renderSidebar();
-          renderWelcome();
-          alert('تم استعادة البيانات بنجاح.');
+          saveData().then(() => {
+            currentYearId = null; currentSubjectId = null;
+            renderSidebar();
+            renderWelcome();
+            alert('تم استعادة البيانات بنجاح.');
+          });
         }
       } catch (err) {
-        alert('الملف ده مش نسخة احتياطية صالحة.');
+        alert('الملف ده مش نسخة احتياطية صالحة، أو إنك مش مسجّل دخول كأدمن.');
       }
     };
     reader.readAsText(file);
   });
 
-  document.getElementById('clearResultsBtn').addEventListener('click', () => {
-    if (confirm('متأكد من مسح كل نتائج الاختبارات؟')) { clearResults(); alert('تم المسح.'); }
+  document.getElementById('clearResultsBtn').addEventListener('click', async () => {
+    if (confirm('متأكد من مسح كل نتائج الاختبارات؟')) { await clearResults(); alert('تم المسح.'); }
   });
 
-  document.getElementById('changePwBtn').addEventListener('click', () => {
-    const hasExisting = !!getAdminHash();
-    openModal({
-      title: hasExisting ? 'تغيير كلمة مرور وضع الأدمن' : 'تحديد كلمة مرور وضع الأدمن',
-      bodyHtml: `
-        ${hasExisting ? `<div class="field"><label>كلمة المرور الحالية</label><input type="password" id="fPwOld"></div>` : ''}
-        <div class="field"><label>كلمة المرور الجديدة</label><input type="password" id="fPwNew1" placeholder="4 أحرف على الأقل"></div>
-        <div class="field"><label>تأكيد كلمة المرور الجديدة</label><input type="password" id="fPwNew2"></div>
-      `,
-      saveLabel: 'حفظ',
-      onSave: async (body) => {
-        if (hasExisting) {
-          const old = body.querySelector('#fPwOld').value;
-          if ((await hashText(old)) !== getAdminHash()) { alert('كلمة المرور الحالية غير صحيحة'); return false; }
-        }
-        const n1 = body.querySelector('#fPwNew1').value;
-        const n2 = body.querySelector('#fPwNew2').value;
-        if (n1.length < 4) { alert('كلمة المرور قصيرة جدًا (4 أحرف على الأقل)'); return false; }
-        if (n1 !== n2) { alert('كلمتا المرور غير متطابقتين'); return false; }
-        await setAdminPassword(n1);
-        alert('تم حفظ كلمة المرور.');
-        renderSettingsPage();
-      }
+  const signOutBtn = document.getElementById('signOutBtn');
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => {
+      await signOutAdmin();
+      renderSidebar();
+      document.getElementById('adminModeToggle').checked = false;
+      renderWelcome();
     });
-  });
+  }
 
-  const removePwBtn = document.getElementById('removePwBtn');
-  if (removePwBtn) {
-    removePwBtn.addEventListener('click', () => {
-      if (confirm('هيبقى أي حد يقدر يفعّل وضع الأدمن من غير كلمة مرور. متأكد؟')) {
-        clearAdminPassword();
-        renderSettingsPage();
-      }
+  const changePwBtn = document.getElementById('changePwBtn');
+  if (changePwBtn) {
+    changePwBtn.addEventListener('click', () => {
+      openModal({
+        title: 'تغيير كلمة مرور الأدمن',
+        bodyHtml: `
+          <div class="field"><label>كلمة المرور الجديدة</label><input type="password" id="fPwNew1" placeholder="6 أحرف على الأقل"></div>
+          <div class="field"><label>تأكيد كلمة المرور الجديدة</label><input type="password" id="fPwNew2"></div>
+        `,
+        saveLabel: 'حفظ',
+        onSave: async (body) => {
+          const n1 = body.querySelector('#fPwNew1').value;
+          const n2 = body.querySelector('#fPwNew2').value;
+          if (n1.length < 6) { alert('كلمة المرور قصيرة جدًا (6 أحرف على الأقل)'); return false; }
+          if (n1 !== n2) { alert('كلمتا المرور غير متطابقتين'); return false; }
+          const { error } = await sb.auth.updateUser({ password: n1 });
+          if (error) { alert('تعذّر تغيير كلمة المرور: ' + error.message); return false; }
+          alert('تم تغيير كلمة المرور بنجاح.');
+        }
+      });
     });
   }
 
   document.getElementById('resetDefaultsBtn').addEventListener('click', async () => {
-    if (confirm('هيتم مسح كل تعديلاتك واستعادة البيانات الأصلية. متأكد؟')) {
-      await resetToDefaults();
+    if (confirm('هيتم مسح كل تعديلاتك واستعادة البيانات الأصلية على Supabase. متأكد؟')) {
+      await seedFromDefaults();
       currentYearId = null; currentSubjectId = null;
       renderSidebar();
       renderWelcome();
@@ -956,10 +955,33 @@ function renderSettingsPage() {
 // ===================================================================
 // Init
 // ===================================================================
-loadAllData().then(() => {
+async function init() {
+  if (!SUPABASE_CONFIGURED) {
+    $page.innerHTML = `
+      <div class="empty-state">
+        <strong>لسه محتاج تربط المنصة بـ Supabase.</strong><br><br>
+        افتح ملف <code>js/config.js</code> وحط رابط مشروعك ومفتاح الـ anon key بتاعك (اتبع الخطوات في README.md).
+      </div>`;
+    return;
+  }
+
+  const session = await getSession();
+  if (session) {
+    adminMode = true;
+    currentUserEmail = session.user.email;
+    document.getElementById('adminModeToggle').checked = true;
+  }
+
+  try {
+    await loadAllData();
+  } catch (err) {
+    $page.innerHTML = `<div class="empty-state">تعذّر تحميل البيانات من Supabase. اتأكد إن الجداول والصلاحيات (RLS) متظبطة زي README.md. تفاصيل الخطأ: ${escapeHtml(err.message || '')}</div>`;
+    console.error(err);
+    return;
+  }
+
   renderSidebar();
   renderWelcome();
-}).catch(err => {
-  $page.innerHTML = `<div class="empty-state">تعذّر تحميل البيانات. لو بتفتح الملف مباشرة من الجهاز (file://) لازم تشغّل سيرفر محلي بسيط. التفاصيل في README.</div>`;
-  console.error(err);
-});
+}
+
+init();
